@@ -1,16 +1,34 @@
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint, jsonify, request, redirect, url_for, make_response
+import os
+from flask import Blueprint, jsonify, request, redirect, url_for, make_response, render_template
 
 __plugin_name__ = "plugin1"
 __version__ = "0.1.0"
-__author__ = "staugur"
+__author__ = "Patrik Dokoupil"
+__author_contact__ = "Patrik.Dokoupil@matfyz.cuni.cz"
 
 bp = Blueprint("plugin1", "plugin1")
 
+NUM_TO_SELECT = 5
+
+
+@bp.route("/num-to-select")
+def get_num_to_select():
+    return {
+        'num_to_select': NUM_TO_SELECT
+    }
+
 @bp.route("/limit")
 def limit():
-    return "Hello from the plugin"
+    template_vars = {
+        "title": __plugin_name__,
+        "author": __author__,
+        "version": __version__,
+        "author_contact": __author_contact__,
+        "num_to_select": NUM_TO_SELECT
+    }
+    return render_template("plugin1.html", **template_vars)
     #return jsonify(dict(status=0, message="Access Denial"))
 
 def limit_handler():
