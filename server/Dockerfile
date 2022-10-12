@@ -26,5 +26,6 @@ RUN pip install Flask-PluginKit
 
 EXPOSE 5000
 
-ENTRYPOINT ["python"]
-CMD ["app.py"]
+# ENTRYPOINT ["python"]
+# CMD ["app.py"]
+CMD ["flask run --port=5000 --host=0.0.0.0"]

@@ -4,3 +4,6 @@ mlflow
 numpy
 scikit-learn
 scipy
+flask-login
+flask-sqlalchemy
+bcrypt

@@ -1,24 +1,36 @@
-from flask import Flask, render_template
-import os
+import flask
 from flask_pluginkit import PluginManager
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 
-app = Flask(__name__)
-pm = PluginManager(plugins_folder="plugins")
-pm.init_app(app)
+db = SQLAlchemy()
 
+def create_app():
+    app = flask.Flask(__name__)
 
-@app.route("/limit2")
-def lim():
-    return render_template("index.html")
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 
-@app.route("/")
-def index():
-    print("XY")
-    return render_template("index.html")
+    db.init_app(app)
 
-if __name__ == "__main__":
-    print(os.getcwd())
-    print(os.listdir(os.getcwd()))
-    print(os.listdir("plugins"))
-    print(f"Starting, all plugins: {pm.get_all_plugins}")
-    app.run(debug=True, host="0.0.0.0")
+    login_manager = LoginManager(app)
+    
+    print("@@ Called")
+    pm = PluginManager(plugins_folder="plugins")
+    pm.init_app(app)
+    print("@@ Still called")
+
+    from models import User
+
+    @login_manager.user_loader
+    def user_loader(user_id):
+        """Given *user_id*, return the associated User object.
+
+        :param unicode user_id: user_id (email) user to retrieve
+
+        """
+        return User.query.get(user_id)
+
+    from main import main as main_blueprint
+    app.register_blueprint(main_blueprint)
+
+    return app
