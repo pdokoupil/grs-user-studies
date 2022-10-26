@@ -63,11 +63,11 @@ def join():
 @bp.route("/preference-elicitation", methods=["GET"])
 def preference_elicitation():
     json_data =  {} #request.get_json()
-    print("Loading data")
-    cluster_data = load_data()
-    return json.dumps(cluster_data)
-    #return render_template("preference_elicitation.html", cluster_data=jsonify(cluster_data))
-    
+    return render_template("preference_elicitation.html")
+
+@bp.route("/cluster-data", methods=["GET"])
+def cluster_data():
+    return json.dumps(load_data())
     
     #return render_template("preference_elicitation.html", **json_data)
 

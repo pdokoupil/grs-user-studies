@@ -69,23 +69,56 @@ def load_data():
 
 
         # Get dense
-        dense_rm = gen_dense_rating_matrix(rating_matrix)
+        dense_rm, most_rated_items_subset = gen_dense_rating_matrix(rating_matrix)
         # Normalize
         dense_rm = subtract_mean_normalize(dense_rm)
+        print(f"Dense_rm = {dense_rm}")
         # Generate groups
         groups = gen_groups(dense_rm, NUM_CLUSTERS)
+        print(f"Groups: {groups}")
+        
+        new_groups = dict()
+        for idx, group in enumerate(groups):
+            new_groups[most_rated_items_subset[idx]] = group
+        groups = new_groups
+
+        most_rated_items_subset_ids = {movie_index_to_id[i] for i in most_rated_items_subset}
+        print(f"most_rated_items_subset_ids={most_rated_items_subset_ids}")
+        tags_df_best = tags_df[tags_df.movieId.isin(most_rated_items_subset_ids)]
+        print(tags_df_best)
+        print(tags_df_best.tag.unique().size)
+        print(tags_df_best.groupby(["tag"]).count())
+
+        print(f"Formated groups: {groups}")
         group_labels = label_groups(groups, tags, tag_counts_per_movie)
+        print(f"Group labels: {group_labels}")
+
+        movie_to_group = dict()
+        for movie, group in groups.items():
+            movie_to_group[movie] = group
+        
         # Add most relevant movies
-        cluster_data = {}
+        cluster_data = []
+        deny_list = set() # Across groups to prevent user confusion
         for group, group_tags in group_labels.items():
-            cluster_data[group] = dict()
+            print(f"Group={group} has tags={group_tags}\n\n")
+            cluster_data.append(dict())
+            cluster_data[-1]["tags"] = list()
             for tag in group_tags:
-                cluster_data[group][tag] = [movie_index_to_description[movie_idx] for movie_idx in most_relevant_movies(tag, tag_counts_per_movie)]
+                most_rel = most_relevant_movies(group, movie_to_group, deny_list, tag, tag_counts_per_movie)
+                d = {
+                    "tag": tag,
+                    "movies": [movie_index_to_description[movie_idx] for movie_idx in most_rel]
+                }
+                deny_list.update(most_rel)
+                print(f"Deny list: {deny_list}")
+                cluster_data[-1]["tags"].append(d)
         return cluster_data
+    return cluster_data
 
 # Takes rating matrix and returns dense copy
 def gen_dense_rating_matrix(rating_matrix):
-    print(f"Rating matrix shape: {rating_matrix.shape}")
+    #print(f"Rating matrix shape: {rating_matrix.shape}")
     #assert np.all(rating_matrix >= 0.0), "Rating matrix must be non-negative"
     # Number of times each item was rated
     ratings_per_item = np.sum(rating_matrix > 0.0, axis=0)
@@ -101,8 +134,8 @@ def gen_dense_rating_matrix(rating_matrix):
     dense_rating_matrix = dense_rating_matrix[selected_users, :]
     assert dense_rating_matrix.ndim == rating_matrix.ndim, f"Dense rating matrix should preserve ndim: {dense_rating_matrix.shape}"
     assert np.all(dense_rating_matrix.shape <= rating_matrix.shape), f"Making dense rating matrix should not increase dimensions: {dense_rating_matrix.shape} vs. {rating_matrix.shape}"
-    print(f"Dense rating matrix shape: {dense_rating_matrix.shape}")
-    return dense_rating_matrix
+    #print(f"Dense rating matrix shape: {dense_rating_matrix.shape}")
+    return dense_rating_matrix, most_rated_items_subset
 
 # Normalize the rating matrix by subtracting mean rating of each user
 def subtract_mean_normalize(rating_matrix):
@@ -126,10 +159,13 @@ def tag_relevance(tag, group_items, tag_counts_per_movie):
         rel += tag_counts_per_movie[item][tag]
     return rel
 
-def most_relevant_movies(tag, tag_counts_per_movie):
+def most_relevant_movies(group, movie_to_group, deny_list, tag, tag_counts_per_movie):
     movie_counts = dict()
     for movie, tag_counts in tag_counts_per_movie.items():
-        movie_counts[movie] = tag_counts[tag]
+        if movie in deny_list or movie not in movie_to_group or movie_to_group[movie] != group:
+            pass #movie_counts[movie] = -1
+        else:
+            movie_counts[movie] = tag_counts[tag]
     return sorted(movie_counts.keys(), key=lambda x: movie_counts[x], reverse=True)[:NUM_MOVIES_PER_TAG]
 
 def acc_per_cluster_tag_relevance(tag, group_to_items, tag_counts_per_movie):
@@ -146,7 +182,7 @@ def acc_per_tag_tag_relevance(group_items, tag_counts_per_movie):
         for tag, tag_count in tag_counts_per_movie[movie].items():
             if tag_count > 0:
                 group_tags.add(tag)
-    print(group_tags)
+    #print(group_tags)
     for tag in group_tags:
         acc += tag_relevance(tag, group_items, tag_counts_per_movie)
     return acc
@@ -154,12 +190,12 @@ def acc_per_tag_tag_relevance(group_items, tag_counts_per_movie):
 # Prepares description for each of the groups
 def label_groups(group_assignment, tags, tag_counts_per_movie):
     group_to_items = dict()
-    for item, group in enumerate(group_assignment):
+    for item, group in group_assignment.items():
         if group not in group_to_items:
             group_to_items[group] = []
         group_to_items[group].append(item)
     best_group_tags = dict()
-    for group in set(group_assignment):
+    for group in set(group_assignment.values()):
         tag_prod = dict()
         for tag in tags:
             d1 = acc_per_cluster_tag_relevance(tag, group_to_items, tag_counts_per_movie)
@@ -173,9 +209,9 @@ def label_groups(group_assignment, tags, tag_counts_per_movie):
             else:
                 relevance = tag_relevance(tag, group_to_items[group], tag_counts_per_movie) / d2
             tag_prod[tag] = uniqueness * relevance
-        print(tag_prod)
+        #print(tag_prod)
         best_tags = sorted(tag_prod.keys(), key=lambda x: tag_prod[x], reverse=True)
-        print(f"Best tags for group={group} are: {best_tags}")
+        #print(f"Best tags for group={group} are: {best_tags}")
         best_group_tags[group] = best_tags[:NUM_TAGS_PER_GROUP]
     return best_group_tags
 
@@ -186,6 +222,6 @@ def elicit_preferences(rating_matrix):
     assert rating_matrix.ndim == 2, f"Expecting 2D rating matrix: {rating_matrix.shape}"
 
     dense_rating_matrix = gen_dense_rating_matrix(rating_matrix)
-    print(dense_rating_matrix)
+    #print(dense_rating_matrix)
 
 

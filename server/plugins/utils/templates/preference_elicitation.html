@@ -8,19 +8,27 @@
         </p>
     </b-jumbotron>
     <b-form method="POST" action="{{continuation_url}}">
-        <b-form-group
-          horizontal
-        >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <b-row>
-              
-            </b-row>
-            <b-row align-h="end">
-              <b-btn variant="primary">Finish</b-btn>
-            </b-row>
-        </b-form-group>
-      </b-form>
-    </b-container>
+      <b-form-group
+        horizontal
+      >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <b-row>
+            
+          </b-row>
+          <b-row align-h="end">
+            <b-btn variant="primary">Finish</b-btn>
+          </b-row>
+      </b-form-group>
+    </b-form>
+
+    <b-row align-h="center">
+      <b-table show-empty :items="items"  current-page="3" small="true" table-class="w-auto">
+        <template #cell()="data">
+          [[ data.value ]]
+        </template>
+      </b-table>
+    </b-row>
+</b-container>
 </div>
 
 {{ emit_assets('utils','preference_elicitation.js') }}        
