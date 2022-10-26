@@ -1,12 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
     <title>Administration</title>
-</head>
-<body>
-    Administration page
-</body>
+
+    <!-- Required Stylesheets -->
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    />
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue.css"
+    />
+
+    <!-- Required scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
+
+    
+    <!-- Load polyfills to support older browsers -->
+    <script src="https://unpkg.com/babel-polyfill@6.26.0/dist/polyfill.min.js"></script>
+    
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue-icons.js"></script> <!-- Needed just for the Icons -->
+  </head>
+  <body>
+    <!-- Our application root element -->
+    <div id="app">
+      <b-container align-h="center">
+        <b-jumbotron header="Administration" lead="Manage templates and user studies.">
+            <p></p>
+            <b-btn variant="primary" href="https://bootstrap-vue.org/">More Info</b-btn>
+          </b-jumbotron>
+      </b-container>
+
+      <div>
+        <b-row align-h="center">
+            <h1>Available templates</h1>
+        </b-row>
+        <b-row align-h="center">
+            <b-table show-empty :items="availableTemplates" :fields="availableTemplatesFields" small="true" table-class="w-auto">
+                <template #cell()="data">
+                    <i>[[ data.value ]]</i>
+                </template>
+
+                <template #cell(create_url)="data">
+                    <b-btn variant="primary" :href="data.value">Create</b-btn>
+                </template>
+                
+            </b-table>
+        </b-row>
+        <b-row align-h="center">
+            <h1>Existing user studies</h1>
+        </b-row>
+        <b-row align-h="center">
+            <b-table show-empty :items="existingUserStudies" current-page="3" small="true" table-class="w-auto">
+                <template #cell()="data">
+                  <!-- [[ data.value.url ]] -->
+                  <i>[[ data.value ]]</i>
+                  
+                  <!-- <img width="60" height="60" v-on:click="handleRecommendationClick($event)" :id="data.value.id" :src="data.value.url"/> -->
+                </template>
+            </b-table>
+        </b-row>
+      </div>
+
+    </div>
+
+    <!-- Start running your app -->
+    <script>
+      window.app = new Vue({
+        el: '#app',
+        delimiters: ['[[',']]'], // Used to replace double { escaping with double [ escaping (to prevent jinja vs vue inference)
+        data: function() {
+            return {
+                availableTemplatesFields: [
+                    {key: "plugin_name", label: "Name"},
+                    {key: "plugin_description", label: "Description"},
+                    {key: "plugin_version", label: "Version"},
+                    {key: "plugin_author", label: "Author"},
+                    {key: "create_url", label: "Create"}
+                ],
+                availableTemplates: {}, // Query server for loaded plugins
+                existingUserStudies: {} // Query (-> server -> database) for existing user studies
+            }
+        },
+        async mounted() {
+          this.availableTemplates = await fetch("/loaded-plugins").then((resp) => resp.json());
+          this.existingUserStudies = await fetch("/existing-user-studies").then((resp) => resp.json());
+        }
+      })
+    </script>
+  </body>
 </html>

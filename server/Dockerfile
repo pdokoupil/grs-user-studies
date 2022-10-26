@@ -23,9 +23,12 @@ RUN pip install --upgrade pip
 # RUN pip install -e ./elliot --verbose
 RUN pip install caserecommender
 RUN pip install Flask-PluginKit
+RUN pip install is-safe-url
+RUN pip install aiohttp[speedups]
 
 EXPOSE 5000
 
 # ENTRYPOINT ["python"]
 # CMD ["app.py"]
-CMD ["flask run --port=5000 --host=0.0.0.0"]
+ENTRYPOINT [ "python" ]
+CMD ["-m", "flask", "--debug", "run", "--port=5000", "--host=0.0.0.0"]

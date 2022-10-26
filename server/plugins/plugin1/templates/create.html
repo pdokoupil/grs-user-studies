@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+    <title>Administration</title>
+
+    <!-- Required Stylesheets -->
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    />
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue.css"
+    />
+
+    <!-- Required scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
+
+    
+    <!-- Load polyfills to support older browsers -->
+    <script src="https://unpkg.com/babel-polyfill@6.26.0/dist/polyfill.min.js"></script>
+    
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue-icons.js"></script> <!-- Needed just for the Icons -->
+  </head>
+  <body>
+    <!-- Our application root element -->
+    <div id="app">
+      <b-container align-h="center">
+        <b-jumbotron header="Plugin1 Create" lead="Create user study.">
+            <p></p>
+            <b-btn variant="primary" href="https://bootstrap-vue.org/">More Info</b-btn>
+          </b-jumbotron>
+          <b-alert show variant="primary">Whatever setting for creation of plugin 1</b-alert>
+          <b-btn variant="primary" v-on:click="onCreateUserStudy">Create</b-btn>
+          <b-btn variant="warning" v-on:click="cancelCreateUserStudy">Cancel</b-btn>
+      </b-container>
+    </div>
+
+    <!-- Start running your app -->
+    <script>
+      window.app = new Vue({
+        el: '#app',
+        delimiters: ['[[',']]'], // Used to replace double { escaping with double [ escaping (to prevent jinja vs vue inference)
+        data: function() {
+            return {}
+        },
+        methods: {
+            async onCreateUserStudy() {
+                let pluginName = "{{plugin_name}}";
+                console.log("Creating user study for plugin: " + pluginName);
+                
+                let userStudyConfiguration = {
+                    "someConfigKey": 1234
+                };
+
+                let userStudyData = {
+                    "parent_plugin": pluginName,
+                    "config": userStudyConfiguration
+                };
+
+                let res = await fetch("/create-user-study",
+                    {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify(userStudyData),
+                        redirect: "follow"
+                    }
+                ).then(response => {
+                    if (response.redirected) {
+                        console.log(response);
+                        window.location.href = response.url;
+                    } else {
+                        return response.text()
+                    }
+                });
+                console.log(res);
+            },
+            
+            cancelCreateUserStudy() {
+                window.location.href = "{{ url_for('main.administration') }}"
+            }
+        }
+      })
+    </script>
+  </body>
+</html>

@@ -7,3 +7,5 @@ scipy
 flask-login
 flask-sqlalchemy
 bcrypt
+flask-wtf
+pyaml

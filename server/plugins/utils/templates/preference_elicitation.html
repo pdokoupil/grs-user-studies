@@ -1,0 +1,28 @@
+{% include 'header.html' %}
+
+<div id="app">
+<b-container >
+    <b-jumbotron header="GRS Movies" lead="User study evaluating GRS recommending movies">
+        <p>
+        TEST
+        </p>
+    </b-jumbotron>
+    <b-form method="POST" action="{{continuation_url}}">
+        <b-form-group
+          horizontal
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <b-row>
+              
+            </b-row>
+            <b-row align-h="end">
+              <b-btn variant="primary">Finish</b-btn>
+            </b-row>
+        </b-form-group>
+      </b-form>
+    </b-container>
+</div>
+
+{{ emit_assets('utils','preference_elicitation.js') }}        
+<script src="{{url_for('static', filename='common.js')}}"></script>
+{% include 'footer.html' %}

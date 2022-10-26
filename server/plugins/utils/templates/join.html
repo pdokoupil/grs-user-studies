@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+    <title>{{ title }}</title>
+
+    <!-- Required Stylesheets -->
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    />
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue.css"
+    />
+
+    <!-- Required scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
+
+    
+    <!-- Load polyfills to support older browsers -->
+    <script src="https://unpkg.com/babel-polyfill@6.26.0/dist/polyfill.min.js"></script>
+    
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue-icons.js"></script> <!-- Needed just for the Icons -->
+    <style>
+      img.selected {
+          outline: 5px solid green;
+          outline-offset: -5px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Our application root element -->
+    <div id="app">
+      <b-container >
+        <b-jumbotron header="Participant details">
+          <p>Please enter your email address.</p>
+        </b-jumbotron>
+            <b-form method="POST" action="{{continuation_url}}">
+              <b-form-group
+                horizontal
+              >
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <b-row>
+                    <b-form-input  name="email" type="email" placeholder="Enter your email" :value="userEmail"/>
+                  </b-row>
+                  <b-row align-h="end">
+                    <b-btn variant="primary" v-on:click="handleStartUserStudyClick">Start user study</b-btn>
+                  </b-row>
+              </b-form-group>
+            </b-form>
+
+            
+      </b-container>
+    </div>
+
+    <!-- Start running your app -->
+    <script>
+
+      window.app = new Vue({
+        el: '#app',
+        delimiters: ['[[',']]'], // Used to replace double { escaping with double [ escaping (to prevent jinja vs vue inference)
+        data: function() {
+          return {
+            userEmail: "{{email}}"
+          }
+        },
+        computed: {
+          showAlert() {
+            return this.name.length > 4 ? true : false
+          },
+          enoughItemsSelected() {
+            console.log("ABC");
+            return this.selectedIds.size == this.numToSelect;
+          }
+        },
+        methods: {
+          async handleStartUserStudyClick() {
+            console.log("{{continuation_url}}");
+            userData = {
+              "email": this.userEmail,
+              "guid": "{{guid}}"
+            };
+            let redirected = false;
+
+            let addParticipantRess = await fetch("{{url_for('main.add_participant')}}", {
+              method: "POST",
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+              },
+              body: JSON.stringify({"some_key2": 547}),
+            }).then(resp => resp.text());
+
+            let res = await fetch("{{continuation_url}}",
+              {
+                  method: "POST",
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': '{{ csrf_token() }}'
+                  },
+                  body: JSON.stringify(userData),
+                  redirect: "follow"
+              }
+            ).then(response => {
+                if (response.redirected) {
+                    console.log(response);
+                    window.location.href = response.url;
+                    redirected = true;
+                } else {
+                    return response.text()
+                }
+            });
+
+            console.log(res);
+            if (redirected === false) {
+              document.body.innerHTML = res;
+              window.history.pushState("", "", '{{continuation_url}}');
+            }
+          }
+        },
+        async mounted() {
+          console.log("Mounted was called");
+        }
+      })
+    </script>
+  </body>
+</html>
