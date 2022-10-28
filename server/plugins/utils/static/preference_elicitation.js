@@ -18,8 +18,9 @@ window.app = new Vue({
         console.log("Mounted was called");
         // Get the number of items user is supposed to select
         console.log(this.items);
+        console.log("Querying cluster data");
         let clusterData = await fetch("/utils/cluster-data").then((resp) => resp.json()).then((resp) => resp);
-        
+        console.log("DONE")
         for (var clusterIdx = 0; clusterIdx < clusterData.length; ++clusterIdx) {
             for (var k in clusterData[clusterIdx]["tags"]) {
                 let tag = clusterData[clusterIdx]["tags"][k]["tag"];
