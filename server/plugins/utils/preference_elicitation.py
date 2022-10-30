@@ -8,6 +8,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pandas as pd
 
+from ml_data_loader import MLDataLoader, RatingUserFilter, RatingMovieFilter, MovieFilter, TagsFilter
+from composed_func import ComposedFunc
+from rating_matrix_transform import SubtractMeanNormalize
+
 import flask_pluginkit
 
 MOST_RATED_MOVIES_THRESHOLD = 200
@@ -41,48 +45,27 @@ def load_data():
         
         # Load Rating matrix
         ratings_path = os.path.join(basedir, "static", "ml-latest/ratings.csv")
-        ratings_df = pd.read_csv(ratings_path)
-        print(f"Ratings shape: {ratings_df.shape}, n_users = {ratings_df.userId.unique().size}, n_items = {ratings_df.movieId.unique().size}")
-        # Filter rating matrix
-        # First filter out users who gave <= 1 ratings
-        ratings_df = ratings_df[ratings_df['userId'].map(ratings_df['userId'].value_counts()) >= MIN_RATINGS_PER_USER]
-        print(f"Ratings shape after user filtering: {ratings_df.shape}, n_users = {ratings_df.userId.unique().size}, n_items = {ratings_df.movieId.unique().size}")
-        # Then filter out users that were rated <= 1 times
-        ratings_df = ratings_df[ratings_df['movieId'].map(ratings_df['movieId'].value_counts()) >= MIN_RATINGS_PER_MOVIE]
-        ratings_df = ratings_df.reset_index(drop=True)
-        print(f"Ratings shape after item filtering: {ratings_df.shape}, n_users = {ratings_df.userId.unique().size}, n_items = {ratings_df.movieId.unique().size}")
-
-
         movies_path = os.path.join(basedir, "static", "ml-latest/movies.csv")
-        movies_df = pd.read_csv(movies_path)
-        movies_df = movies_df[movies_df.movieId.isin(ratings_df.movieId.unique())]
-        movies_df = movies_df.reset_index(drop=True)
-
-        movie_index_to_id = pd.Series(movies_df.movieId.values,index=movies_df.index).to_dict()
-        movie_id_to_index = pd.Series(movies_df.index,index=movies_df.movieId.values).to_dict()
-        num_movies = len(movie_id_to_index)
-
-
-        unique_users = ratings_df.userId.unique()
-        num_users = unique_users.size
-        
-        user_to_user_index = dict(zip(unique_users, range(num_users)))
-
         rating_matrix_path = os.path.join(basedir, "static", "ml-latest/rating_matrix.npy")
-        if os.path.exists(rating_matrix_path):
-            rating_matrix = np.load(rating_matrix_path)
-        else:
-            rating_matrix = np.zeros(shape=(num_users, num_movies), dtype=np.float32)
-            for row_idx, row in ratings_df.iterrows():
-                if row_idx % 100000 == 0:
-                    print(row_idx)
-                rating_matrix[user_to_user_index[row.userId], movie_id_to_index[row.movieId]] = row.rating
-            np.save(rating_matrix_path, rating_matrix)
+        tags_path = os.path.join(basedir, "static", "ml-latest/tags.csv")
+        
+    
+        loader = MLDataLoader(ratings_path, movies_path, tags_path,
+            ComposedFunc([RatingUserFilter(MIN_RATINGS_PER_USER), RatingMovieFilter(MIN_RATINGS_PER_MOVIE)]),
+            MovieFilter(), None, rating_matrix_path=rating_matrix_path
+        )
+        loader.load()
+        
+
+
 
         # Get dense
-        dense_rm, most_rated_items_subset = gen_dense_rating_matrix(rating_matrix)
+        dense_rm, most_rated_items_subset = gen_dense_rating_matrix(loader.rating_matrix)
+        most_rated_items_subset_ids = {movie_index_to_id[i] for i in most_rated_items_subset}
+        loader.tags_df = TagsFilter(most_rated_items_subset_ids, MIN_NUM_TAG_OCCURRENCES)(loader.tags_df)
+        
         # Normalize
-        dense_rm = subtract_mean_normalize(dense_rm)
+        dense_rm = SubtractMeanNormalize()(dense_rm)
         print(f"Dense_rm = {dense_rm}")
         # Generate groups
         groups = gen_groups(dense_rm, NUM_CLUSTERS)
@@ -92,37 +75,6 @@ def load_data():
         for idx, group in enumerate(groups):
             new_groups[most_rated_items_subset[idx]] = group
         groups = new_groups
-
-        most_rated_items_subset_ids = {movie_index_to_id[i] for i in most_rated_items_subset}
-
-
-
-        tags_path = os.path.join(basedir, "static", "ml-latest/tags.csv")
-        tags_df = pd.read_csv(tags_path)
-        tags_df = tags_df[tags_df.movieId.isin(most_rated_items_subset_ids)]
-        print(f"Tags_df shape: {tags_df.shape}")
-        tags_df = tags_df[tags_df['tag'].map(tags_df['tag'].value_counts()) >= MIN_NUM_TAG_OCCURRENCES]
-        print(f"Tags_df shape: {tags_df.shape}")
-        
-        # Maps movie index to text description
-        movies_df["description"] = movies_df.title + ' ' + movies_df.genres
-        movie_index_to_description = dict(zip(movies_df.index, movies_df.description))
-        
-        # Set of all unique tags
-        tags = set(tags_df.tag.unique())
-        
-        # Maps movie index to tag counts per movie
-        tag_counts_per_movie = { movie_index : defaultdict(int) for movie_index in movie_index_to_id.keys() }
-        for group_name, group_df in tags_df.groupby("movieId"):
-            for _, row in group_df.iterrows():
-                tag_counts_per_movie[movie_id_to_index[group_name]][row.tag] += 1
-
-
-        # print(f"most_rated_items_subset_ids={most_rated_items_subset_ids}")
-        # tags_df_best = tags_df[tags_df.movieId.isin(most_rated_items_subset_ids)]
-        # print(tags_df_best)
-        # print(tags_df_best.tag.unique().size)
-        # print(tags_df_best.groupby(["tag"]).count())
 
         print(f"Formated groups: {groups}")
         group_labels = label_groups(groups, tags, tag_counts_per_movie)
@@ -172,9 +124,6 @@ def gen_dense_rating_matrix(rating_matrix):
     #print(f"Dense rating matrix shape: {dense_rating_matrix.shape}")
     return dense_rating_matrix, most_rated_items_subset
 
-# Normalize the rating matrix by subtracting mean rating of each user
-def subtract_mean_normalize(rating_matrix):
-    return rating_matrix - rating_matrix.mean(axis=1, keepdims=True)
 
 def gen_groups(rating_matrix, n_groups):
     similarities = cosine_similarity(rating_matrix.T)

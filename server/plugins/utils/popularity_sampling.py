@@ -5,6 +5,38 @@ import numpy as np
 MIN_RATINGS_PER_USER = 500
 MIN_RATINGS_PER_MOVIE = 500
 
+
+class PopularitySamplingFromBucketsElicitation:
+    def __init__(self, n_buckets, n_samples_per_bucket):
+        assert n_buckets == len(n_samples_per_bucket)
+        self.n_buckets = n_buckets
+        self.n_samples_per_bucket = n_samples_per_bucket
+
+    def _calculate_item_popularities(self, rating_matrix):
+        return np.sum(rating_matrix > 0.0, axis=0) / rating_matrix.shape[0]
+
+    def get_initial_data(self):
+        popularities = self._calculate_item_popularities(rating_matrix)
+        indices = np.argsort(-popularities)
+        sorted_popularities = popularities[indices]
+        sorted_items = np.arange(popularities.shape[0])[indices]
+        assert sorted_popularities.ndim == sorted_items.ndim
+
+        n_items_total = sum(self.n_samples_per_bucket)
+        result = np.zeros((n_items_total, ), dtype=np.int32)
+
+        offset = 0
+        for items_bucket, popularities_bucket, n_samples in zip(
+            np.array_split(sorted_items, self.n_buckets),
+            np.array_split(sorted_popularities, self.n_buckets),
+            self.n_samples_per_bucket
+        ):
+            samples = np.random.choice(items_bucket, size=n_samples, p=popularities_bucket, replace=False)
+            result[offset:offset+n_samples] = samples
+            offset += n_samples
+            
+        return result
+
 # Popularity-sampling based implementation of preference elicitation
 class PopularitySamplingElicitation:
     
@@ -56,7 +88,7 @@ class PopularitySamplingElicitation:
         p_popularities = popularities / popularities.sum()
         print(f"Popularities = {popularities}")
         print(f"p_popularities = {p_popularities}")
-        s = np.random.choice(np.arange(rating_matrix.shape[1]), p=p_popularities, size=10)
+        s = np.random.choice(np.arange(rating_matrix.shape[1]), p=p_popularities, size=10, replace=False)
         print(f"Sample: {s}")
         print(f"RM shape: {rating_matrix.shape}")
         print(f"Sample items: {popularities[s]}")
