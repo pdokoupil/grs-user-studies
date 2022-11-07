@@ -6,27 +6,44 @@
         <p>
         TEST
         </p>
+        <i class="{{impl}}" id="impl"></i>
     </b-jumbotron>
-    <b-form method="POST" action="{{continuation_url}}">
+    <!-- <b-form method="POST" action="{{continuation_url}}"> -->
+    <b-form method="GET" action="/utils/send-feedback">
       <b-form-group
         horizontal
       >
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="impl" value="{{ impl }}" />
           <b-row>
             
           </b-row>
           <b-row align-h="end">
-            <b-btn variant="primary">Finish</b-btn>
+            <b-btn v-on:Click="onElicitationFinish" variant="primary">Finish</b-btn>
           </b-row>
       </b-form-group>
     </b-form>
 
-    <b-row align-h="center">
-      <b-table show-empty :items="items"  current-page="3" small="true" table-class="w-auto">
+    
+    <!-- <b-row align-h="center"> -->
+      
+      <!-- <b-table show-empty :items="items"  current-page="3" small="true" table-class="w-auto" :select-mode="selectMode" ref="selectableTable" selectable @row-clicked="onRowClicked">
         <template #cell()="data">
           [[ data.value ]]
         </template>
-      </b-table>
+
+        <template #cell(movie)="data">
+          <img :src="data.item.movie.url" v-on:click="onSelectMovie($event)" :id="data.item.movie.idx"/>
+      </template>
+      </b-table> -->
+    <!-- </b-row> -->
+    <b-row align-h="center" align-content="center" v-for="row in rows">
+      <b-col class="align-middle" v-for="col in row">
+        <b-img center :src="col.movie.url" v-on:click="onSelectMovie($event)" :id="col.movie.idx" :alt="col.movieName" v-b-tooltip.hover :title="col.movieName" />
+      </b-col>
+    </b-row>
+    <b-row>
+      [[ selected ]]
     </b-row>
 </b-container>
 </div>

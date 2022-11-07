@@ -7,3 +7,4 @@ class ComposedFunc:
         tmp = df_filter
         for f in self.filters:
             tmp = f(tmp, *args, **kwargs)
+        return tmp
