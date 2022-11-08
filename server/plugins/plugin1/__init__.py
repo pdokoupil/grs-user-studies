@@ -53,7 +53,7 @@ def step1():
     json_data = request.get_json()
     print(f"Got json: {json_data}")
     print("After preference elicitation")
-    return render_template("step.html", step_number=1)
+    return render_template("step.html", step_number=1, movies=json_data)
 
 @bp.route("/step2", methods=["GET"])
 def step2():

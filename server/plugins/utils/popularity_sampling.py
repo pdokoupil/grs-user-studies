@@ -44,8 +44,9 @@ class PopularitySamplingFromBucketsElicitation:
 # Popularity-sampling based implementation of preference elicitation
 class PopularitySamplingElicitation:
     
-    def __init__(self, rating_matrix):
+    def __init__(self, rating_matrix, n_samples=10):
         self.rating_matrix = rating_matrix
+        self.n_samples = n_samples
 
     def _calculate_item_popularities(self, rating_matrix):
         return np.sum(rating_matrix > 0.0, axis=0) / rating_matrix.shape[0]
@@ -57,7 +58,7 @@ class PopularitySamplingElicitation:
         p_popularities = popularities / popularities.sum()
         print(f"Popularities = {popularities}")
         print(f"p_popularities = {p_popularities}")
-        s = np.random.choice(np.arange(self.rating_matrix.shape[1]), p=p_popularities, size=10, replace=False)
+        s = np.random.choice(np.arange(self.rating_matrix.shape[1]), p=p_popularities, size=self.n_samples, replace=False)
         print(f"Sample: {s}")
         print(f"RM shape: {self.rating_matrix.shape}")
         print(f"Sample items: {popularities[s]}")

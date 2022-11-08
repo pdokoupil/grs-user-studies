@@ -111,7 +111,8 @@ class MLDataLoader:
         print("@@ Get movie function")
         try:
             print("@@ Try")
-            return self.access.get_movie(imdbId)["cover url"]
+            #return self.access.get_movie(imdbId)["cover url"]
+            return self.access.get_movie(imdbId)["full-size cover url"]
         except Exception as e:
             print("@@ Exception")
             return ""

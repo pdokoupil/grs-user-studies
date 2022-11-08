@@ -50,20 +50,33 @@ groups = None
 # Loads the movielens dataset
 @functools.cache
 def load_ml_dataset(ml_variant="ml-latest"):
-    ratings_path = os.path.join(basedir, "static", f"{ml_variant}/ratings.csv")
-    movies_path = os.path.join(basedir, "static", f"{ml_variant}/movies.csv")
-    rating_matrix_path = os.path.join(basedir, "static", f"{ml_variant}/rating_matrix.npy")
-    tags_path = os.path.join(basedir, "static", f"{ml_variant}/tags.csv")
-    links_path = os.path.join(basedir, "static", f"{ml_variant}/links.csv")
-    
-    start_time = time.perf_counter()
-    loader = MLDataLoader(ratings_path, movies_path, tags_path, links_path,
-        ComposedFunc([RatingMovieFilter(MIN_RATINGS_PER_MOVIE), RatingUserFilter(MIN_RATINGS_PER_USER), RatingTagFilter(MIN_TAGS_PER_MOVIE)]),
-        MovieFilter(), TagsRatedMoviesFilter(), rating_matrix_path=rating_matrix_path
-    )
-    loader.load()
-    print(f"## Loading took: {time.perf_counter() - start_time}")
-    return loader
+    cache_path = os.path.join(basedir, "static", "ml-latest", "data_cache.pckl")
+    if os.path.exists(cache_path):
+        print(f"Trying to load data cache from: {cache_path}")
+        with open(cache_path, "rb") as f:
+            return pickle.load(f)
+    else:
+        print("Cache not available, loading everything again")
+        
+        ratings_path = os.path.join(basedir, "static", f"{ml_variant}/ratings.csv")
+        movies_path = os.path.join(basedir, "static", f"{ml_variant}/movies.csv")
+        rating_matrix_path = os.path.join(basedir, "static", f"{ml_variant}/rating_matrix.npy")
+        tags_path = os.path.join(basedir, "static", f"{ml_variant}/tags.csv")
+        links_path = os.path.join(basedir, "static", f"{ml_variant}/links.csv")
+        
+        start_time = time.perf_counter()
+        loader = MLDataLoader(ratings_path, movies_path, tags_path, links_path,
+            ComposedFunc([RatingMovieFilter(MIN_RATINGS_PER_MOVIE), RatingUserFilter(MIN_RATINGS_PER_USER), RatingTagFilter(MIN_TAGS_PER_MOVIE)]),
+            MovieFilter(), TagsRatedMoviesFilter(), rating_matrix_path=rating_matrix_path
+        )
+        loader.load()
+        print(f"## Loading took: {time.perf_counter() - start_time}")
+
+        print(f"Caching the data to {cache_path}")
+        with open(cache_path, "wb") as f:
+            pickle.dump(loader, f)
+
+        return loader
 
 def load_data_1():
     global cluster_data
@@ -169,21 +182,11 @@ def load_data_1():
 
 def load_data_2():
     
-    cache_path = os.path.join(basedir, "static", "ml-latest", "data_cache.pckl")
-    if os.path.exists(cache_path):
-        print(f"Trying to load data cache from: {cache_path}")
-        with open(cache_path, "rb") as f:
-            loader = pickle.load(f)
-    else:
-        print("Cache not available, loading everything again")
-        loader = load_ml_dataset()
-        print(f"Caching the data to {cache_path}")
-        with open(cache_path, "wb") as f:
-            pickle.dump(loader, f)
+    loader = load_ml_dataset()
 
     # Get list of items
     start_time = time.perf_counter()
-    data = PopularitySamplingElicitation(loader.rating_matrix).get_initial_data()
+    data = PopularitySamplingElicitation(loader.rating_matrix, n_samples=16).get_initial_data()
     print(f"Getting initial data took: {time.perf_counter() - start_time}")
     
     #print([loader.movie_index_to_description[movie_idx] for movie_idx in data])
@@ -321,7 +324,7 @@ def recommend_1(selected_cluster):
     return res
 
 def recommend_2_3(selected_movies):
-    loader = load_dataset()
+    loader = load_ml_dataset()
 
     # algo_als = als.BiasedMF(10, iterations=5)
     algo = als.ImplicitMF(200, iterations=50)

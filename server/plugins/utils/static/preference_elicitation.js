@@ -83,19 +83,30 @@ window.app = new Vue({
         
     },
     methods: {
-        onSelectMovie(event) {
+        onSelectMovie(event, item) {
             console.log("Hello from ID=" + event.srcElement.id);
             console.log(event.srcElement.cl)
             console.log(event);
+            console.log(item.movieName);
 
-            for (var k in this.items) {
-                let item = this.items[k];
-                if (item.movie.idx === event.srcElement.id) {
-                    console.log("Found match");
-                    console.log(this.items[k]);
-                    this.items[k]["selected"] = true;
-                    console.log(this.items[k]);
-                }
+            // for (var k in this.items) {
+            //     let item = this.items[k];
+            //     if (item.movie.idx === event.srcElement.id) {
+            //         console.log("Found match");
+            //         console.log(this.items[k]);
+            //         this.items[k]["selected"] = true;
+            //         console.log(this.items[k]);
+            //     }
+            // }
+            let index = this.selected.indexOf(item);
+            if (index > -1) {
+                // Already there, remove it
+                this.selected.splice(index, 1);
+                event.srcElement.parentElement.classList.remove("bg-info");
+            } else {
+                // Not there, insert
+                this.selected.push(item);
+                event.srcElement.parentElement.classList.add("bg-info");
             }
         },
         onRowClicked(item) {
@@ -166,6 +177,36 @@ window.app = new Vue({
                 let got = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
                 console.log("Got values: " + got);
                 console.log(got);
+
+                let redirected = false;
+
+                // Continue with step 1
+                let res = await fetch(nextStepUrl,
+                {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(got),
+                    redirect: "follow"
+                }
+                ).then(response => {
+                    if (response.redirected) {
+                        console.log(response);
+                        window.location.href = response.url;
+                        redirected = true;
+                    } else {
+                        return response.text()
+                    }
+                });
+
+                // Follow link and ensure that URL bar is reloaded as well
+                console.log(res);
+                if (redirected === false) {
+                    document.body.innerHTML = res;
+                    window.history.pushState("", "", nextStepUrl);
+                }
             }
             
         }
