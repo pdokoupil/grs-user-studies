@@ -7,15 +7,16 @@ MIN_RATINGS_PER_MOVIE = 500
 
 
 class PopularitySamplingFromBucketsElicitation:
-    def __init__(self, rating_matrix, n_buckets, n_samples_per_bucket):
+    def __init__(self, rating_matrix, n_buckets, n_samples_per_bucket, k=1.0):
         assert n_buckets == len(n_samples_per_bucket)
         self.rating_matrix = rating_matrix
         self.n_buckets = n_buckets
         self.n_samples_per_bucket = n_samples_per_bucket
+        self.k = k
 
     def _calculate_item_popularities(self, rating_matrix):
         #  Umocnit na K
-        return np.sum(rating_matrix > 0.0, axis=0) / rating_matrix.shape[0]
+        return np.power(np.sum(rating_matrix > 0.0, axis=0) / rating_matrix.shape[0], self.k)
 
     def get_initial_data(self):
         popularities = self._calculate_item_popularities(self.rating_matrix)
@@ -44,12 +45,13 @@ class PopularitySamplingFromBucketsElicitation:
 # Popularity-sampling based implementation of preference elicitation
 class PopularitySamplingElicitation:
     
-    def __init__(self, rating_matrix, n_samples=10):
+    def __init__(self, rating_matrix, n_samples=10, k=1.0):
         self.rating_matrix = rating_matrix
         self.n_samples = n_samples
+        self.k = k
 
     def _calculate_item_popularities(self, rating_matrix):
-        return np.sum(rating_matrix > 0.0, axis=0) / rating_matrix.shape[0]
+        return np.power(np.sum(rating_matrix > 0.0, axis=0) / rating_matrix.shape[0], self.k)
 
 
     # Returns data to be shown to the user

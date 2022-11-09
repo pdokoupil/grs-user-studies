@@ -1,14 +1,14 @@
-from collections import defaultdict
-from bs4 import BeautifulSoup
-import flask
-import requests
+# import numba
+# numba.config.THREADING_LAYER = "tbb"
+
+import os
+
 
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics.pairwise import cosine_similarity
 #from sklearn.metrics.pairwise import pairwise_kernels
 
 import numpy as np
-import pandas as pd
 import pickle
 
 from .ml_data_loader import MLDataLoader, RatingUserFilter, RatingMovieFilter, MovieFilter, TagsFilter, TagsRatedMoviesFilter, RatingTagFilter
@@ -19,7 +19,7 @@ from .popularity_sampling import PopularitySamplingElicitation, PopularitySampli
 # from composed_func import ComposedFunc
 # from rating_matrix_transform import SubtractMeanNormalize
 # from popularity_sampling import PopularitySamplingElicitation, PopularitySamplingFromBucketsElicitation
-import flask_pluginkit
+
 
 import time
 import datetime as dt
@@ -209,7 +209,7 @@ def load_data_2():
 def load_data_3():
     loader = load_ml_dataset()
     # Get list of items
-    data = PopularitySamplingFromBucketsElicitation(loader.rating_matrix, 5, [5]*5).get_initial_data()
+    data = PopularitySamplingFromBucketsElicitation(loader.rating_matrix, 5, [4]*5).get_initial_data()
     print([loader.movie_index_to_description[movie_idx] for movie_idx in data])
     print([loader.movies_df.iloc[movie_idx].title for movie_idx in data])
     res = [loader.movie_index_to_description[movie_idx] for movie_idx in data]
@@ -269,7 +269,7 @@ def recommend_1(selected_cluster):
     selected_movie_indices = np.where(movies_to_select)[0]
 
     #algo = user_knn.UserUser() #als.BiasedMF(50)
-    algo = als.ImplicitMF(200, iterations=50)
+    algo = als.ImplicitMF(100, iterations=50)
     algo = Recommender.adapt(algo)
     max_user = loader.ratings_df.userId.max()
     ratings_df = loader.ratings_df
@@ -307,7 +307,7 @@ def recommend_1(selected_cluster):
     #prediction = algo_als.predict_for_user(max_user + 1, ratings_df.item.unique())
     #print("Starting sort")
     #sorted_prediction = prediction.sort_values(ascending=False)[:10].index # Take top 10
-    sorted_prediction = algo.recommend(max_user + 1, n=10)
+    sorted_prediction = algo.recommend(max_user + 1, n=8)
     print(f"Sorted prediction: {sorted_prediction}")
     sorted_prediction = sorted_prediction.item
     
@@ -327,7 +327,7 @@ def recommend_2_3(selected_movies):
     loader = load_ml_dataset()
 
     # algo_als = als.BiasedMF(10, iterations=5)
-    algo = als.ImplicitMF(200, iterations=50)
+    algo = als.ImplicitMF(100, iterations=50)
     algo = Recommender.adapt(algo)
 
     max_user = loader.ratings_df.userId.max()
@@ -352,7 +352,7 @@ def recommend_2_3(selected_movies):
     #prediction = algo_als.predict_for_user(max_user + 1, ratings_df.item.unique())
     #print("Starting sort")
     #sorted_prediction = prediction.sort_values(ascending=False)[:10].index # Take top 10
-    sorted_prediction = algo.recommend(max_user + 1, n=10)
+    sorted_prediction = algo.recommend(max_user + 1, n=8)
     print(f"Sorted prediction: {sorted_prediction}")
     sorted_prediction = sorted_prediction.item
     
@@ -490,4 +490,63 @@ def elicit_preferences(rating_matrix):
 if __name__ == "__main__":
     #y = load_data_1()
     #x = recommend_1(1)
-    load_data_2()
+    #load_data_2()
+
+    # loader = load_ml_dataset()
+    # algo1 = als.ImplicitMF(200, iterations=50)
+    # algo1 = Recommender.adapt(algo1)
+
+    # algo2 = als.ImplicitMF(200, iterations=50)
+    # algo2 = Recommender.adapt(algo2)
+
+    # #####
+    # max_user = loader.ratings_df.userId.max()
+    # ratings_df = loader.ratings_df.rename(columns={"movieId": "item", "userId": "user"})
+    # print(ratings_df.tail())
+    # print(max_user + 1)
+    
+
+    # all_animation = loader.tags_df[loader.tags_df.tag == "animation"].movieId.unique()
+    # print(f"All animation = {all_animation}")
+    # selected_movies = [ 50872,  87876,   3745,   8360,  68358,    616,  96281, 177765,
+    #     74553,   4306, 115617,  26662,   5218,  59784,   2355,  55442,
+    #       594,   2137,   7228,  79091] #all_animation[:20]
+    # print(f"Selected movies: {selected_movies}, {[p in all_animation for p in selected_movies]}")
+    # for movie in selected_movies:
+    #     ratings_df.loc[ratings_df.index.max() + 1] = [max_user + 1, movie, 5.0, dt.datetime.now()]
+
+    # print(f"Df shape: {ratings_df.shape}")
+    # ratings_df = ratings_df[ratings_df.rating >= 4.0]
+    # print(f"Df shape after filter: {ratings_df.shape}")
+    # print(f"Extended ratings_df: {ratings_df[ratings_df.user == max_user + 1]}")
+    # ratings_df_extension = ratings_df[ratings_df.user == max_user + 1]
+    
+    # print(f"Loader ratings df: {loader.ratings_df.tail()}")
+    # print(f"Ratings_df: {ratings_df.tail()}")
+    
+    # # print("Starting fit of Algo 1 on all the data including extended")
+    # # algo1 = algo1.fit(ratings_df)
+    # # print("Starting prediction")
+    # # sorted_prediction = algo1.recommend(max_user + 1, n=10)
+    # # print(f"Sorted prediction: {sorted_prediction}")
+    
+    # ### Algo 2
+    # print("Starting fit of algo 2 on loader.ratings_df")
+    # ratings_df = loader.ratings_df.rename(columns={"movieId": "item", "userId": "user"})
+    # print(ratings_df.describe())
+    # print(ratings_df)
+    # start_time = time.perf_counter()
+    # algo2 = algo2.fit(ratings_df)
+    # print(f"Fit took: {time.perf_counter() - start_time}")
+    # print("Starting prediction, the user should be unknown by now")
+    # sorted_prediction = algo2.recommend(max_user + 1, n=10)
+    # print(f"Sorted prediction: {sorted_prediction}")
+    # print("Starting fit of algo 2 on ratings_df_extension")
+    # print(ratings_df_extension.describe())
+    # print(ratings_df_extension)
+    
+    # algo2 = algo2.fit(ratings_df_extension)
+    # print("Starting prediction")
+    # sorted_prediction = algo2.recommend(max_user + 1, n=10)
+    # print(f"Sorted prediction: {sorted_prediction}")
+    pass

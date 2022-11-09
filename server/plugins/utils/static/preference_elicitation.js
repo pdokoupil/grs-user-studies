@@ -18,7 +18,10 @@ window.app = new Vue({
         lastSelectedCluster: null,
         handle: false,
         rows: [],
-        itemsPerRow: 8
+        rows2: [],
+        itemsPerRow: 8,
+        jumboHeader: "Preference Elicitation",
+        disableNextStep: false
     }
     },
     async mounted() {
@@ -168,47 +171,96 @@ window.app = new Vue({
                 let cid = parseInt(this.selected[0].cluster, 10) - 1;
                 let params = "selectedCluster=" + cid.toString();
                 console.log("Selected cluster is: " + params);
-                let got = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
-                console.log("Got values: " + got);
-                console.log(got);
+                var recommendations = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
+                console.log("Got values: " + recommendations);
+                console.log(recommendations);
             } else {
                 let params = "selectedMovies=" + this.selected.map((x) => x.movie.idx).join(",");
                 console.log("Selected movies are: " + params);
-                let got = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
-                console.log("Got values: " + got);
-                console.log(got);
+                var recommendations = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
+                console.log("Got values: " + recommendations);
+                console.log(recommendations);
+                console.log("GOing to: " + nextStepUrl);
 
-                let redirected = false;
 
-                // Continue with step 1
-                let res = await fetch(nextStepUrl,
-                {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(got),
-                    redirect: "follow"
-                }
-                ).then(response => {
-                    if (response.redirected) {
-                        console.log(response);
-                        window.location.href = response.url;
-                        redirected = true;
-                    } else {
-                        return response.text()
+                
+                // let redirected = false;
+
+                // // Continue with step 1
+                // let res = await fetch(nextStepUrl,
+                // {
+                //     method: "POST",
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //         'X-CSRFToken': csrfToken
+                //     },
+                //     body: JSON.stringify(got),
+                //     redirect: "follow"
+                // }
+                // ).then(response => {
+                //     if (response.redirected) {
+                //         console.log(response);
+                //         window.location.href = response.url;
+                //         redirected = true;
+                //     } else {
+                //         return response.text()
+                //     }
+                // });
+
+                // // Follow link and ensure that URL bar is reloaded as well
+                // console.log(res);
+                // if (redirected === false) {
+                //     console.log("Setting innher html");
+                //     document.body.innerHTML = res;
+                //     window.history.pushState("", "", nextStepUrl);
+                // }
+            }
+            this.jumboHeader = "Resulting Recommendations"
+            for (var i in this.selected) {
+                document.getElementById(this.selected[i].movie.idx).parentElement.classList.remove("bg-info");
+            }
+            this.selected = [];
+            
+            // Update rows
+            this.rows = [];
+            let row = [];
+            this.disableNextStep = true;
+            for (var k in recommendations) {
+                row.push({
+                    "movieName": recommendations[k]["movie"],
+                    "movie": {
+                        "idx": recommendations[k]["movie_idx"],
+                        "url": recommendations[k]["url"]
                     }
                 });
-
-                // Follow link and ensure that URL bar is reloaded as well
-                console.log(res);
-                if (redirected === false) {
-                    document.body.innerHTML = res;
-                    window.history.pushState("", "", nextStepUrl);
+                if (row.length >= this.itemsPerRow) {
+                    this.rows.push(row);
+                    row = [];
                 }
             }
-            
+            if (row.length > 0) {
+                this.rows.push(row);
+            }
+
+
+            // Rows2 are now filled with dummy items
+            row = [];
+            for (var k in recommendations) {
+                row.push({
+                    "movieName": recommendations[0]["movie"],
+                    "movie": {
+                        "idx": recommendations[0]["movie_idx"],
+                        "url": recommendations[0]["url"]
+                    }
+                });
+                if (row.length >= this.itemsPerRow) {
+                    this.rows2.push(row);
+                    row = [];
+                }
+            }
+            if (row.length > 0) {
+                this.rows2.push(row);
+            }
         }
     }
 })

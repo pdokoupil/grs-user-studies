@@ -50,10 +50,10 @@ def join():
 @bp.route("/step1", methods=["GET", "POST"])
 def step1():
     # Parameters received from callback (if this is continuation) are in JSON
-    json_data = request.get_json()
-    print(f"Got json: {json_data}")
-    print("After preference elicitation")
-    return render_template("step.html", step_number=1, movies=json_data)
+    # json_data = request.get_json()
+    # print(f"Got json: {json_data}")
+    # print("After preference elicitation")
+    return render_template("step.html", step_number=1, movies={})
 
 @bp.route("/step2", methods=["GET"])
 def step2():
