@@ -166,54 +166,68 @@ window.app = new Vue({
                 
             }
         },
-        async onElicitationFinish() {
+        onElicitationFinish(form) {
+            let implTag = document.createElement("input");
+            let selectedMoviesTag = document.createElement("input");
+            implTag.setAttribute("type","hidden");
+            implTag.setAttribute("name","impl");
+            implTag.setAttribute("value",this.impl);
+            selectedMoviesTag.setAttribute("type","hidden");
+            selectedMoviesTag.setAttribute("name","selectedMovies");
+            selectedMoviesTag.setAttribute("value", this.selected.map((x) => x.movie.idx).join(","));
+
+            form.appendChild(implTag);
+            form.appendChild(selectedMoviesTag);
+            console.log(form);
+            form.submit();
+            return;
             if (this.impl === "1") {
-                let cid = parseInt(this.selected[0].cluster, 10) - 1;
-                let params = "selectedCluster=" + cid.toString();
-                console.log("Selected cluster is: " + params);
-                var recommendations = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
-                console.log("Got values: " + recommendations);
-                console.log(recommendations);
+                // let cid = parseInt(this.selected[0].cluster, 10) - 1;
+                // let params = "selectedCluster=" + cid.toString();
+                // console.log("Selected cluster is: " + params);
+                // var recommendations = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
+                // console.log("Got values: " + recommendations);
+                // console.log(recommendations);
             } else {
-                let params = "selectedMovies=" + this.selected.map((x) => x.movie.idx).join(",");
-                console.log("Selected movies are: " + params);
-                var recommendations = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
-                console.log("Got values: " + recommendations);
-                console.log(recommendations);
-                console.log("GOing to: " + nextStepUrl);
+                // let params = "selectedMovies=" + this.selected.map((x) => x.movie.idx).join(",");
+                // console.log("Selected movies are: " + params);
+                // var recommendations = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
+                // console.log("Got values: " + recommendations);
+                // console.log(recommendations);
+                // console.log("GOing to: " + nextStepUrl);
 
 
                 
-                // let redirected = false;
+                // // let redirected = false;
 
-                // // Continue with step 1
-                // let res = await fetch(nextStepUrl,
-                // {
-                //     method: "POST",
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //         'X-CSRFToken': csrfToken
-                //     },
-                //     body: JSON.stringify(got),
-                //     redirect: "follow"
-                // }
-                // ).then(response => {
-                //     if (response.redirected) {
-                //         console.log(response);
-                //         window.location.href = response.url;
-                //         redirected = true;
-                //     } else {
-                //         return response.text()
-                //     }
-                // });
+                // // // Continue with step 1
+                // // let res = await fetch(nextStepUrl,
+                // // {
+                // //     method: "POST",
+                // //     headers: {
+                // //         'Content-Type': 'application/json',
+                // //         'X-CSRFToken': csrfToken
+                // //     },
+                // //     body: JSON.stringify(got),
+                // //     redirect: "follow"
+                // // }
+                // // ).then(response => {
+                // //     if (response.redirected) {
+                // //         console.log(response);
+                // //         window.location.href = response.url;
+                // //         redirected = true;
+                // //     } else {
+                // //         return response.text()
+                // //     }
+                // // });
 
-                // // Follow link and ensure that URL bar is reloaded as well
-                // console.log(res);
-                // if (redirected === false) {
-                //     console.log("Setting innher html");
-                //     document.body.innerHTML = res;
-                //     window.history.pushState("", "", nextStepUrl);
-                // }
+                // // // Follow link and ensure that URL bar is reloaded as well
+                // // console.log(res);
+                // // if (redirected === false) {
+                // //     console.log("Setting innher html");
+                // //     document.body.innerHTML = res;
+                // //     window.history.pushState("", "", nextStepUrl);
+                // // }
             }
             this.jumboHeader = "Resulting Recommendations"
             for (var i in this.selected) {

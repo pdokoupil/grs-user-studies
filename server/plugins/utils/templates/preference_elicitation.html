@@ -7,7 +7,7 @@
     <b-jumbotron v-else-if="{{impl}}==1" :header="jumboHeader" lead="Cluster based"></b-jumbotron>
     <i class="{{impl}}" id="impl"></i>
     <!-- <b-form method="POST" action="{{continuation_url}}"> -->
-    <b-form method="GET" action="/utils/send-feedback">
+    <b-form name="theForm" method="GET" action="/utils/send-feedback">
       <b-form-group
         horizontal
       >
@@ -17,7 +17,7 @@
             
           </b-row>
           <b-row align-h="end">
-            <b-btn v-on:Click="onElicitationFinish" :disabled="disableNextStep" variant="primary">Next step</b-btn>
+            <b-btn v-on:Click="onElicitationFinish(theForm)" :disabled="disableNextStep" variant="primary">Next step</b-btn>
             <!-- <b-btn href="{{url_for('plugin1.step1')}}" variant="primary">Next step</b-btn> -->
           </b-row>
       </b-form-group>

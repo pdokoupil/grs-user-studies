@@ -1,3 +1,4 @@
+import datetime
 import glob
 import time
 import imdb
@@ -14,85 +15,135 @@ class RatingUserFilter:
     def __init__(self, min_ratings_per_user):
         self.min_ratings_per_user = min_ratings_per_user
 
-    def __call__(self, ratings_df, *args, **kwargs):
+    def __call__(self, loader):
         # First filter out users who gave <= 1 ratings
-        ratings_df = ratings_df[ratings_df['userId'].map(ratings_df['userId'].value_counts()) >= self.min_ratings_per_user]
-        ratings_df = ratings_df.reset_index(drop=True)
-        print(f"Ratings shape after user filtering: {ratings_df.shape}, n_users = {ratings_df.userId.unique().size}, n_items = {ratings_df.movieId.unique().size}")
-        return ratings_df
+        loader.ratings_df = loader.ratings_df[loader.ratings_df['userId'].map(loader.ratings_df['userId'].value_counts()) >= self.min_ratings_per_user]
+        loader.ratings_df = loader.ratings_df.reset_index(drop=True)
+        print(f"Ratings shape after user filtering: {loader.ratings_df.shape}, n_users = {loader.ratings_df.userId.unique().size}, n_items = {loader.ratings_df.movieId.unique().size}")
         
+# Filters out all low ratings
+class RatingLowFilter:
+    def __init__(self, min_rating):
+        self.min_rating = min_rating
+    def __call__(self, loader):
+        loader.ratings_df = loader.ratings_df[loader.ratings_df.rating >= self.min_rating]
+        loader.ratings_df = loader.ratings_df.reset_index(drop=True)
 
 class RatingMovieFilter:
     def __init__(self, min_ratings_per_movie):
         self.min_ratings_per_movie = min_ratings_per_movie
-    def __call__(self, ratings_df, *args, **kwargs):
+    def __call__(self, loader):
         # Filter out users that were rated <= 1 times
-        ratings_df = ratings_df[ratings_df['movieId'].map(ratings_df['movieId'].value_counts()) >= self.min_ratings_per_movie]
-        ratings_df = ratings_df.reset_index(drop=True)
-        print(f"Ratings shape after item filtering: {ratings_df.shape}, n_users = {ratings_df.userId.unique().size}, n_items = {ratings_df.movieId.unique().size}")
-        return ratings_df
+        loader.ratings_df = loader.ratings_df[loader.ratings_df['movieId'].map(loader.ratings_df['movieId'].value_counts()) >= self.min_ratings_per_movie]
+        loader.ratings_df = loader.ratings_df.reset_index(drop=True)
+        print(f"Ratings shape after item filtering: {loader.ratings_df.shape}, n_users = {loader.ratings_df.userId.unique().size}, n_items = {loader.ratings_df.movieId.unique().size}")
 
 class RatingTagFilter:
     def __init__(self, min_tags_per_movie):
         self.min_tags_per_movie = min_tags_per_movie
-    def __call__(self, ratings_df, loader, *args, **kwargs):
+    def __call__(self, loader):
         # Filter out movies that do not have enough tags (we do not want those movies to end up in the dense pool for group based elicitation)
         # Even if they have many ratings
         tags_per_movie = loader.tags_df.groupby("movieId")["movieId"].count()
         tags_per_movie = tags_per_movie[tags_per_movie > self.min_tags_per_movie]
-        print(f"Ratings shape before tag filtering: {ratings_df.shape}, n_users = {ratings_df.userId.unique().size}, n_items = {ratings_df.movieId.unique().size}")
-        ratings_df = ratings_df[ratings_df.movieId.isin(tags_per_movie)]
-        ratings_df = ratings_df.reset_index(drop=True)
-        print(f"Ratings shape after tag filtering: {ratings_df.shape}, n_users = {ratings_df.userId.unique().size}, n_items = {ratings_df.movieId.unique().size}")
-        return ratings_df
+        print(f"Ratings shape before tag filtering: {loader.ratings_df.shape}, n_users = {loader.ratings_df.userId.unique().size}, n_items = {loader.ratings_df.movieId.unique().size}")
+        loader.ratings_df = loader.ratings_df[loader.ratings_df.movieId.isin(tags_per_movie)]
+        loader.ratings_df = loader.ratings_df.reset_index(drop=True)
+        print(f"Ratings shape after tag filtering: {loader.ratings_df.shape}, n_users = {loader.ratings_df.userId.unique().size}, n_items = {loader.ratings_df.movieId.unique().size}")
 
-class MovieFilter:
-    def __call__(self, movies_df, ratings_df, *args, **kwargs):
+class RatedMovieFilter:
+    def __call__(self, loader):
         # We are only interested in movies for which we hav
-        movies_df = movies_df[movies_df.movieId.isin(ratings_df.movieId.unique())]
-        movies_df = movies_df.reset_index(drop=True)
-        return movies_df
+        loader.movies_df = loader.movies_df[loader.movies_df.movieId.isin(loader.ratings_df.movieId.unique())]
+        loader.movies_df = loader.movies_df.reset_index(drop=True)
+
+# Filters out all ratings of movies that do not have enough ratings per year
+class RatingsPerYearFilter:
+    def __init__(self, min_ratings_per_year):
+        self.min_ratings_per_year = min_ratings_per_year
+
+    def __call__(self, loader):
+        movies_df_indexed = loader.movies_df.set_index("movieId")
+
+        # Add column with age of each movie
+        movies_df_indexed.loc[:, "age"] = movies_df_indexed.year.max() - movies_df_indexed.year
+        
+        # Calculate number of ratings per year for each of the movies
+        loader.ratings_df.loc[:, "ratings_per_year"] = loader.ratings_df['movieId'].map(loader.ratings_df['movieId'].value_counts()) / loader.ratings_df['movieId'].map(movies_df_indexed["age"])
+        
+        # Filter out movies that do not have enough yearly ratings
+        loader.ratings_df = loader.ratings_df[loader.ratings_df.ratings_per_year >= self.min_ratings_per_year]
+
+class MovieFilterByYear:
+    def __init__(self, min_year):
+        self.min_year = min_year
+        
+    def _parse_year(self, x):
+        x = x.split("(")
+        if len(x) <= 1:
+            return 0
+        try:
+            return int(x[-1].split(")")[0])
+        except:
+            return 0
+
+    def __call__(self, loader):
+        # Filter out unrated movies and old movies
+        # Add year column      
+        loader.movies_df.loc[:, "year"] = loader.movies_df.title.apply(self._parse_year)
+        loader.movies_df = loader.movies_df[loader.movies_df.year >= self.min_year]
+        loader.movies_df = loader.movies_df.reset_index(drop=True)
+
+class RatingFilterOld:
+    def __init__(self, oldest_rating_year):
+        self.oldest_rating_year = oldest_rating_year
+    def __call__(self, loader):
+        # Marker for oldest rating
+        oldest_rating = datetime.datetime(year=self.oldest_rating_year, month=1, day=1, tzinfo=datetime.timezone.utc).timestamp()
+        # Filter ratings that are too old
+        loader.ratings_df = loader.ratings_df[loader.ratings_df.timestamp > oldest_rating]
+        #loader.ratings_df = loader.ratings_df.reset_index(drop=True)
 
 # Just filters out tags that are not present on any of the rated movies
 class TagsRatedMoviesFilter:
-    def __call__(self, tags_df, ratings_df, *args, **kwargs):
-        print(f"TagsRatedMoviesFilter before: {tags_df.shape}")
-        tags_df = tags_df[tags_df.movieId.isin(ratings_df.movieId.unique())]
-        tags_df = tags_df.reset_index(drop=True)
-        print(f"TagsRatedMoviesFilter after: {tags_df.shape}")
-        return tags_df
+    def __call__(self, loader):
+        print(f"TagsRatedMoviesFilter before: {loader.tags_df.shape}")
+        loader.tags_df = loader.tags_df[loader.tags_df.movieId.isin(loader.ratings_df.movieId.unique())]
+        loader.tags_df = loader.tags_df.reset_index(drop=True)
+        print(f"TagsRatedMoviesFilter after: {loader.tags_df.shape}")
 
 class TagsFilter:
     def __init__(self, most_rated_items_subset_ids, min_num_tag_occurrences):
         self.min_num_tag_occurrences = min_num_tag_occurrences
         self.most_rated_items_subset_ids = most_rated_items_subset_ids
-    def __call__(self, tags_df, *args, **kwargs):
+    def __call__(self, loader):
         # For the purpose of group-based preference elicitation we are only interested in tags that occurr in dense subset of items
         # over which the groups are defined
-        tags_df = tags_df[tags_df.movieId.isin(self.most_rated_items_subset_ids)]
-        print(f"Tags_df shape: {tags_df.shape}")
+        loader.tags_df = loader.tags_df[loader.tags_df.movieId.isin(self.most_rated_items_subset_ids)]
+        print(f"Tags_df shape: {loader.tags_df.shape}")
         # We also only consider tags that have enough occurrences, otherwise we will not be able to find enough representants (movies) for each tag
-        tags_df = tags_df[tags_df['tag'].map(tags_df['tag'].value_counts()) >= self.min_num_tag_occurrences]
-        print(f"Tags_df shape: {tags_df.shape}")
-        tags_df = tags_df.reset_index(drop=True)
-        return tags_df
+        loader.tags_df = loader.tags_df[loader.tags_df['tag'].map(loader.tags_df['tag'].value_counts()) >= self.min_num_tag_occurrences]
+        print(f"Tags_df shape: {loader.tags_df.shape}")
+        loader.tags_df = loader.tags_df.reset_index(drop=True)
+
+class LinkFilter:
+    def __call__(self, loader):
+        loader.links_df = loader.links_df[loader.links_df.index.isin((loader.movies_df.movieId))]
 
 class MLDataLoader:
     def __init__(self, ratings_path, movies_path, tags_path, links_path,
-        ratings_df_filter = None,  movies_df_filter = None,
-        tags_df_filter = None, rating_matrix_path = None):
+        filters = None, rating_matrix_path = None):
 
         self.ratings_path = ratings_path
         self.movies_path = movies_path
         self.tags_path = tags_path
-        self.ratings_df_filter = ratings_df_filter
-        self.movies_df_filter = movies_df_filter
-        self.tags_df_filter = tags_df_filter
+        self.filters = filters
         self.links_path = links_path
         self.rating_matrix_path = rating_matrix_path
 
         self.ratings_df = None
         self.movies_df = None
+        self.movies_df_indexed = None
         self.tags_df = None
         self.links_df = None
         self.rating_matrix = None
@@ -129,7 +180,9 @@ class MLDataLoader:
 
     def get_image(self, movie_idx):
         return self.movie_index_to_url[movie_idx]
-        
+        #movie_id = self.movie_index_to_id[movie_idx]
+        #return self._get_image(self.links_df.loc[movie_id].imdbId)
+
     def apply_tag_filter(self, tag_filter, *args, **kwargs):
         self.tags_df = tag_filter(self.tags_df, *args, **kwargs)
 
@@ -200,21 +253,24 @@ class MLDataLoader:
         
         #### Filtering ####
 
-        # Filter rating dataframe
-        if self.ratings_df_filter:
-            self.ratings_df = self.ratings_df_filter(self.ratings_df, self)
+        # # Filter rating dataframe
+        # if self.ratings_df_filter:
+        #     self.ratings_df = self.ratings_df_filter(self.ratings_df, self)
 
-        # Filter movies dataframe
-        if self.movies_df_filter:
-            self.movies_df = self.movies_df_filter(self.movies_df, self.ratings_df)
+        # # Filter movies dataframe
+        # if self.movies_df_filter:
+        #     self.movies_df = self.movies_df_filter(self.movies_df, self.ratings_df)
+
+        for f in self.filters:
+            f(self)
 
         self.movie_index_to_id = pd.Series(self.movies_df.movieId.values,index=self.movies_df.index).to_dict()
         self.movie_id_to_index = pd.Series(self.movies_df.index,index=self.movies_df.movieId.values).to_dict()
         num_movies = len(self.movie_id_to_index)
 
-        # Filter tags dataframe
-        if self.tags_df_filter:
-            self.apply_tag_filter(self.tags_df_filter, self.ratings_df)
+        # # Filter tags dataframe
+        # if self.tags_df_filter:
+        #     self.apply_tag_filter(self.tags_df_filter, self.ratings_df)
 
 
         unique_users = self.ratings_df.userId.unique()
@@ -240,8 +296,17 @@ class MLDataLoader:
         self.movies_df["description"] = self.movies_df.title + ' ' + self.movies_df.genres
         self.movie_index_to_description = dict(zip(self.movies_df.index, self.movies_df.description))
         
+
+        self.movies_df_indexed = self.movies_df.set_index("movieId")
+
+
         # Prepare urls
+        i = 0
+        print(f"Links shape: {self.links_df.shape}")
         for movie_id, row in self.links_df.iterrows():
+            if i % 100 == 0:
+                print(f"i={i} out of: {self.links_df.shape}")
+            i += 1
             if movie_id not in self.movie_id_to_index:
                 continue
             movie_idx = self.movie_id_to_index[movie_id]
