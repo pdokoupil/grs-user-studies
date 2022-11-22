@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from flask import Blueprint, jsonify, request, redirect, url_for, make_response, render_template
+from flask import Blueprint, jsonify, request, redirect, url_for, make_response, render_template, session
 
 
 __plugin_name__ = "plugin1"
@@ -53,7 +53,13 @@ def step1():
     # json_data = request.get_json()
     # print(f"Got json: {json_data}")
     # print("After preference elicitation")
-    return render_template("step.html", step_number=1, movies={})
+    return render_template("step.html", step_number=1, movies=session["movies"])
+
+@bp.route("/compare-algorithms", methods=["GET"])
+def compare_algorithms():
+    movies = [session["movies"]]
+    movies.append([movies[0][0]] * len(movies[0]))
+    return render_template("compare_algorithms.html", movies=movies)
 
 @bp.route("/step2", methods=["GET"])
 def step2():

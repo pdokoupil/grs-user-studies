@@ -14,6 +14,7 @@ import pickle
 
 
 import tensorflow as tf
+tf.config.set_visible_devices([], 'GPU')
 tf.random.set_seed(42)
 import tensorflow_recommenders as tfrs
 

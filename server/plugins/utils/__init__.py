@@ -99,7 +99,11 @@ def send_feedback():
         selected_movies = [int(m) for m in selected_movies]
         recommended_items = recommend_2_3(selected_movies)
 
-    return recommended_items
+    #return recommended_items
+    print(f"Recommended items: {recommended_items}")
+    flask.session["movies"] = recommended_items
+    return redirect(url_for("plugin1.compare_algorithms"))
+    #return redirect(url_for("plugin1.compare_algorithms", movies=recommended_items))
 
 # Shared implementation of "/finish" phase of the user study
 @bp.route("/finish", methods=["GET", "POST"])

@@ -1,0 +1,35 @@
+{% include 'header.html' %}
+
+<div id="app">
+    <b-container fluid>
+        <b-jumbotron header="Resulting recommendations" lead="">
+            Please choose all the items that you like (from all columns) and answer questions below the columns.
+            Iteration {{ i }}
+        </b-jumbotron>
+
+        <b-row align-h="end">
+            <b-btn class="mr-3">Next</b-btn>
+        </b-row>
+        <b-row>
+            <b-col v-for="variantResults in variantsResults">
+                <b-row align-h="center">
+                    <h2>Algorithm [[ variantsResults.indexOf(variantResults) + 1 ]]</h2>
+                </b-row>
+                <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
+                    <b-col sm="auto" class="align-middle" v-for="col in row">
+                        <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col)" :id="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                    </b-col>
+                </b-row>
+            </b-col>
+        </b-row>
+    </b-container>
+    
+    
+</div>
+
+<script type='text/javascript'>
+    // Capture JINJA stuff here
+    var movies = JSON.parse('{{ movies | tojson | safe}}');
+</script>
+{{ emit_assets('plugin1','compare_algorithms.js') }}     
+{% include 'footer.html' %}
