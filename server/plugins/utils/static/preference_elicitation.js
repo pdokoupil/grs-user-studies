@@ -33,7 +33,8 @@ window.app = new Vue({
         console.log("DONE")
         console.log(clusterData);
         
-        if (this.impl !== "1") {
+        //if (this.impl !== "1") {
+        
             let row = [];
             for (var k in clusterData) {
                 this.items.push({
@@ -58,29 +59,29 @@ window.app = new Vue({
             if (row.length > 0) {
                 this.rows.push(row);
             }
-        } else {
-            for (var clusterIdx = 0; clusterIdx < clusterData.length; ++clusterIdx) {
-                for (var k in clusterData[clusterIdx]["tags"]) {
-                    let tag = clusterData[clusterIdx]["tags"][k]["tag"];
-                    let movies = clusterData[clusterIdx]["tags"][k]["movies"];
-                    let movie_names = movies.map((element) => element.movie);
-                    console.log(movie_names);
-                    let movie_urls = movies.map((element) => element.url);
-                    console.log(movie_urls);
-                    for (var i in movies) {
-                        let movie = movies[i];
-                        this.items.push({"cluster": clusterIdx + 1, "tag": tag, "movie": {
-                            "idx": movie.movie_idx,
-                            "url": movie.url
-                        }});
-                    }
-                    //this.items.push({"cluster": clusterIdx + 1,"tag": tag, "movies": movie_names.join(";")});
-                }
-                // Cluster delimiter
-                //this.items.push({"cluster": "","tag": "", "movies": "", _rowVariant: 'danger'});
-                this.items.push({"cluster": "","tag": "", "movie": "", _rowVariant: 'danger'});
-            }
-        }
+        // } else {
+        //     for (var clusterIdx = 0; clusterIdx < clusterData.length; ++clusterIdx) {
+        //         for (var k in clusterData[clusterIdx]["tags"]) {
+        //             let tag = clusterData[clusterIdx]["tags"][k]["tag"];
+        //             let movies = clusterData[clusterIdx]["tags"][k]["movies"];
+        //             let movie_names = movies.map((element) => element.movie);
+        //             console.log(movie_names);
+        //             let movie_urls = movies.map((element) => element.url);
+        //             console.log(movie_urls);
+        //             for (var i in movies) {
+        //                 let movie = movies[i];
+        //                 this.items.push({"cluster": clusterIdx + 1, "tag": tag, "movie": {
+        //                     "idx": movie.movie_idx,
+        //                     "url": movie.url
+        //                 }});
+        //             }
+        //             //this.items.push({"cluster": clusterIdx + 1,"tag": tag, "movies": movie_names.join(";")});
+        //         }
+        //         // Cluster delimiter
+        //         //this.items.push({"cluster": "","tag": "", "movies": "", _rowVariant: 'danger'});
+        //         this.items.push({"cluster": "","tag": "", "movie": "", _rowVariant: 'danger'});
+        //     }
+        // }
         
 
         
@@ -115,45 +116,38 @@ window.app = new Vue({
         onRowClicked(item) {
             console.log("@@@ onRowClicked");
             console.log(item);
-            if (this.impl === "1") {
-                if (this.lastSelectedCluster !== null) {
-                    // Deselect all the items from that cluster
-                    // for (var i in this.items) {
-                    //     if (this.items[i].cluster === this.lastSelectedCluster) {
-                    //         console.log("Unselecting: " + i);
-                    //         let idx = parseInt(i, 10);
-                    //         this.$refs.selectableTable.unselectRow(idx);
-                    //     }
-                    // }
-                    this.$refs.selectableTable.clearSelected();
-                    // 
-                }
+            // if (this.impl === "1") {
+            //     if (this.lastSelectedCluster !== null) {
+            //         // Deselect all the items from that cluster
+            //         // for (var i in this.items) {
+            //         //     if (this.items[i].cluster === this.lastSelectedCluster) {
+            //         //         console.log("Unselecting: " + i);
+            //         //         let idx = parseInt(i, 10);
+            //         //         this.$refs.selectableTable.unselectRow(idx);
+            //         //     }
+            //         // }
+            //         this.$refs.selectableTable.clearSelected();
+            //         // 
+            //     }
                 
                 
-                this.lastSelectedCluster = item.cluster;
-                console.log(this.lastSelectedCluster);
-                let selectedItems = [];
-                // Select all items from this cluster
-                for (var i in this.items) {
-                    if (this.items[i].cluster === this.lastSelectedCluster && this.items[i] != item) {
-                        console.log("Selecting: " + i);
-                        let idx = parseInt(i, 10);
-                        this.$refs.selectableTable.selectRow(idx);
-                        selectedItems.push(this.items[i]);
-                    }
+            //     this.lastSelectedCluster = item.cluster;
+            //     console.log(this.lastSelectedCluster);
+            //     let selectedItems = [];
+            //     // Select all items from this cluster
+            //     for (var i in this.items) {
+            //         if (this.items[i].cluster === this.lastSelectedCluster && this.items[i] != item) {
+            //             console.log("Selecting: " + i);
+            //             let idx = parseInt(i, 10);
+            //             this.$refs.selectableTable.selectRow(idx);
+            //             selectedItems.push(this.items[i]);
+            //         }
 
-                }
-                this.selected = selectedItems;
+            //     }
+            //     this.selected = selectedItems;
 
-                return;
-                // console.log("Selected items:");
-                // console.log(items);
-                // console.log(this.$refs.selectableTable);
-                //console.log("Select all items from the same cluster");
-                //this.$refs.selectableTable.selectRow(2);
-                //this.$refs.selectableTable.selectRow(3);
-            } else {
-                //this.selected = item;
+            //     return;
+            // } else {
                 
                 let index = this.selected.indexOf(item);
                 if (index > -1) {
@@ -164,7 +158,7 @@ window.app = new Vue({
                     //this.$refs.selectableTable.selectRow(this.items.indexOf(item));
                 }
                 
-            }
+            // }
         },
         onElicitationFinish(form) {
             let implTag = document.createElement("input");

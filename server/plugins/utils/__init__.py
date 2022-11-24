@@ -70,8 +70,11 @@ def preference_elicitation():
 
 @bp.route("/cluster-data-1", methods=["GET"])
 def cluster_data_1():
-    return json.dumps(load_data_1())
+    #return json.dumps(load_data_1())
     
+    x = load_data_1()
+    return jsonify(x)
+
     #return render_template("preference_elicitation.html", **json_data)
 
 @bp.route("/cluster-data-2", methods=["GET"])
@@ -89,19 +92,23 @@ def send_feedback():
     print(f"Args={request.args}")
     impl = request.args.get("impl")
     print(f"Impl='{impl}'")
-    if impl == "1":
-        print(f"IMPL = 1")
-        selected_cluster = int(request.args.get("selectedCluster"))
-        recommended_items = recommend_1(selected_cluster)
-    elif impl == "2" or impl == "3":
-        print("IMPL = 2/3")
-        selected_movies = request.args.get("selectedMovies").split(",")
-        selected_movies = [int(m) for m in selected_movies]
-        recommended_items = recommend_2_3(selected_movies)
+    # if impl == "1":
+    #     print(f"IMPL = 1")
+    #     selected_cluster = int(request.args.get("selectedCluster"))
+    #     recommended_items = recommend_1(selected_cluster)
+    # elif impl == "2" or impl == "3":
+    #     print("IMPL = 2/3")
+    #     selected_movies = request.args.get("selectedMovies").split(",")
+    #     selected_movies = [int(m) for m in selected_movies]
+    #     recommended_items = recommend_2_3(selected_movies)
+    selected_movies = request.args.get("selectedMovies").split(",")
+    selected_movies = [int(m) for m in selected_movies]
+    recommended_items = recommend_2_3(selected_movies)
 
     #return recommended_items
     print(f"Recommended items: {recommended_items}")
     flask.session["movies"] = recommended_items
+    flask.session["iteration"] = 1
     return redirect(url_for("plugin1.compare_algorithms"))
     #return redirect(url_for("plugin1.compare_algorithms", movies=recommended_items))
 

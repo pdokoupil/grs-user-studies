@@ -4,7 +4,7 @@
 <b-container >
     <b-jumbotron v-if="{{impl}}==2" :header="jumboHeader" lead="Random sampling based on popularity"></b-jumbotron>
     <b-jumbotron v-else-if="{{impl}}==3" :header="jumboHeader" lead="Random sampling based on popularity buckets"></b-jumbotron>
-    <b-jumbotron v-else-if="{{impl}}==1" :header="jumboHeader" lead="Cluster based"></b-jumbotron>
+    <b-jumbotron v-else-if="{{impl}}==1" :header="jumboHeader" lead="Random sampling based on relevance, diversity and novelty buckets"></b-jumbotron>
     <i class="{{impl}}" id="impl"></i>
     <!-- <b-form method="POST" action="{{continuation_url}}"> -->
     <b-form name="theForm" method="GET" action="/utils/send-feedback">

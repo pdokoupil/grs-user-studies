@@ -13,6 +13,9 @@ bp = Blueprint(__plugin_name__, __plugin_name__, url_prefix=f"/{__plugin_name__}
 
 NUM_TO_SELECT = 5
 
+MIN_ITERATION_TO_CANCEL = 5
+TOTAL_ITERATIONS = 8
+
 @bp.context_processor
 def plugin_name():
     return {
@@ -59,7 +62,36 @@ def step1():
 def compare_algorithms():
     movies = [session["movies"]]
     movies.append([movies[0][0]] * len(movies[0]))
-    return render_template("compare_algorithms.html", movies=movies)
+    return render_template("compare_algorithms.html", movies=movies, iteration=session["iteration"], MIN_ITERATION_TO_CANCEL=MIN_ITERATION_TO_CANCEL)
+
+@bp.route("/refinement-feedback", methods=["GET"])
+def refinement_feedback():
+    return render_template("refinement_feedback.html", iteration=session["iteration"])
+
+# We received feedback from compare_algorithms.html
+@bp.route("/algorithm-feedback")
+def algorithm_feedback():
+    print("Inside algorithm feedback, forwarding to refinement_feedback")
+    return redirect(url_for("plugin1.refinement_feedback"))
+
+# We receive feedback from refinement_feedback.html
+@bp.route("/refine-results")
+def refine_results():
+    # Go back to compare algorithms
+    print("Inside refine results, increasing iteration and forwarding to compare_algorithms")
+    session["iteration"] += 1
+    return redirect(url_for("plugin1.compare_algorithms"))
+
+@bp.route("/final-questionare")
+def final_questionare():
+    if session["iteration"] < TOTAL_ITERATIONS:
+        return render_template("final_questionare.html", iteration=session["iteration"], premature=True)
+    return render_template("final_questionare.html", iteration=session["iteration"], premature=False)
+
+
+@bp.route("/finish-user-study")
+def finish_user_study():
+    return render_template("finished_user_study.html")
 
 @bp.route("/step2", methods=["GET"])
 def step2():

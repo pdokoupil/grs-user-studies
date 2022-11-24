@@ -28,12 +28,45 @@ window.app = new Vue({
         }
         console.log(moviesColumnified);
         return {
-            variantsResults: moviesColumnified
+            variantsResults: moviesColumnified,
+            selected: []
         }
     },
     computed: {
     },
     methods: {
+
+        // Custom (movie specific) implementation of indexOf operator
+        // Considers only movie's properties
+        movieIndexOf(arr, item) {
+            for (let idx in arr) {
+                let arrItem = arr[idx];
+                if (arrItem.movie_idx === item.movie_idx
+                    && arrItem.movie === item.movie
+                    && arrItem.url === item.url) {
+                        return idx;
+                    }
+            }
+            return -1;
+        },
+        onSelectMovie(event, item, variant) {
+            let index = this.movieIndexOf(this.selected, item);
+            if (index > -1) {
+                // Already there, remove it
+                var copies = document.getElementsByName(event.srcElement.name);
+                for (let j = 0; j < copies.length; ++j) {
+                    copies[j].parentElement.classList.remove("bg-info");
+                }
+                this.selected.splice(index, 1);
+            } else {
+                // Not there, insert
+                var copies = document.getElementsByName(event.srcElement.name);
+                for (let j = 0; j < copies.length; ++j) {
+                    copies[j].parentElement.classList.add("bg-info");
+                }
+                this.selected.push(item);
+            }
+        }
     },
     async mounted() {
         console.log("Mounted was called");

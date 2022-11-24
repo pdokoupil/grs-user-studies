@@ -27,6 +27,7 @@ from ml_data_loader import MLDataLoader, RatingUserFilter, RatingMovieFilter, Ra
 from composed_func import ComposedFunc
 from rating_matrix_transform import SubtractMeanNormalize
 from popularity_sampling import PopularitySamplingElicitation, PopularitySamplingFromBucketsElicitation
+from multi_obj_sampling import MultiObjectiveSamplingFromBucketsElicitation
 from tfrs_model import get_model_25m
 
 import time
@@ -55,6 +56,7 @@ print(f"File={__file__}")
 print(f"Dirname: {os.path.dirname(__file__)}")
 
 groups = None
+
 
 # Loads the movielens dataset
 @functools.cache
@@ -160,107 +162,142 @@ def prepare_tf_model(loader):
 
     return model, train
 
-def load_data_1():
-    global cluster_data
+# def load_data_1():
+#     global cluster_data
     
-    if cluster_data is None:
-        global groups    
+#     if cluster_data is None:
+#         global groups    
         
-        loader = load_ml_dataset()
+#         loader = load_ml_dataset()
 
-        # Get dense
-        start_time = time.perf_counter()
-        dense_rm, most_rated_items_subset = gen_dense_rating_matrix(loader.rating_matrix)
-        print(f"## Dense took: {time.perf_counter() - start_time}")
-        start_time = time.perf_counter()
-        most_rated_items_subset_ids = {loader.movie_index_to_id[i] for i in most_rated_items_subset}
-        loader.apply_tag_filter(TagsFilter(most_rated_items_subset_ids, MIN_NUM_TAG_OCCURRENCES))
-        print(f"## Tags filtering took: {time.perf_counter() - start_time}")
+#         # Get dense
+#         start_time = time.perf_counter()
+#         dense_rm, most_rated_items_subset = gen_dense_rating_matrix(loader.rating_matrix)
+#         print(f"## Dense took: {time.perf_counter() - start_time}")
+#         start_time = time.perf_counter()
+#         most_rated_items_subset_ids = {loader.movie_index_to_id[i] for i in most_rated_items_subset}
+#         loader.apply_tag_filter(TagsFilter(most_rated_items_subset_ids, MIN_NUM_TAG_OCCURRENCES))
+#         print(f"## Tags filtering took: {time.perf_counter() - start_time}")
         
-        # Normalize
-        start_time = time.perf_counter()
-        dense_rm = SubtractMeanNormalize()(dense_rm)
-        print(f"Dense_rm = {dense_rm}")
-        print(f"## Normalize took: {time.perf_counter() - start_time}")
+#         # Normalize
+#         start_time = time.perf_counter()
+#         dense_rm = SubtractMeanNormalize()(dense_rm)
+#         print(f"Dense_rm = {dense_rm}")
+#         print(f"## Normalize took: {time.perf_counter() - start_time}")
         
-        # Generate groups
-        start_time = time.perf_counter()
-        groups = gen_groups(dense_rm, NUM_CLUSTERS)
-        print(f"Groups: {groups}")
-        print(f"## Group generation took: {time.perf_counter() - start_time}")
+#         # Generate groups
+#         start_time = time.perf_counter()
+#         groups = gen_groups(dense_rm, NUM_CLUSTERS)
+#         print(f"Groups: {groups}")
+#         print(f"## Group generation took: {time.perf_counter() - start_time}")
         
-        new_groups = dict()
-        for idx, group in enumerate(groups):
-            new_groups[most_rated_items_subset[idx]] = group
-        groups = new_groups
+#         new_groups = dict()
+#         for idx, group in enumerate(groups):
+#             new_groups[most_rated_items_subset[idx]] = group
+#         groups = new_groups
 
-        start_time = time.perf_counter()
-        print(f"Formated groups: {groups}")
-        group_labels = label_groups(groups, loader.tags, loader.tag_counts_per_movie)
-        print(f"Group labels: {group_labels}")
-        print(f"## Group labeling took: {time.perf_counter() - start_time}")
+#         start_time = time.perf_counter()
+#         print(f"Formated groups: {groups}")
+#         group_labels = label_groups(groups, loader.tags, loader.tag_counts_per_movie)
+#         print(f"Group labels: {group_labels}")
+#         print(f"## Group labeling took: {time.perf_counter() - start_time}")
 
-        movie_to_group = dict()
-        for movie, group in groups.items():
-            movie_to_group[movie] = group
+#         movie_to_group = dict()
+#         for movie, group in groups.items():
+#             movie_to_group[movie] = group
         
-        # Add most relevant movies
-        start_time = time.perf_counter()
-        cluster_data = []
-        deny_list = set() # Across groups to prevent user confusion
-        for group, group_tags in group_labels.items():
-            print(f"Group={group} has tags={group_tags}\n\n")
-            cluster_data.append(dict())
-            cluster_data[-1]["tags"] = list()
-            for tag in group_tags:
-                most_rel = most_relevant_movies(group, movie_to_group, deny_list, tag, loader.tag_counts_per_movie, loader)
-                movies_without_url = []
-                d = {
-                    "tag": tag,
-                    "movies": []
-                }
-                for movie_idx in most_rel:
-                    img_url = loader.get_image(movie_idx)
-                    mov = {
-                        "movie": loader.movie_index_to_description[movie_idx],
-                        "url": img_url,
-                        "movie_idx": movie_idx,
-                        "description": loader.movie_index_to_description[movie_idx]
-                    }
-                    if not img_url:
-                        movies_without_url.append(mov)
-                    else:
-                        d["movies"].append(mov)
-                    if len(d["movies"]) >= NUM_MOVIES_PER_TAG:
-                        print(f"Achieved: {len(d['movies'])} out of {NUM_MOVIES_PER_TAG} needed")
-                        break
+#         # Add most relevant movies
+#         start_time = time.perf_counter()
+#         cluster_data = []
+#         deny_list = set() # Across groups to prevent user confusion
+#         for group, group_tags in group_labels.items():
+#             print(f"Group={group} has tags={group_tags}\n\n")
+#             cluster_data.append(dict())
+#             cluster_data[-1]["tags"] = list()
+#             for tag in group_tags:
+#                 most_rel = most_relevant_movies(group, movie_to_group, deny_list, tag, loader.tag_counts_per_movie, loader)
+#                 movies_without_url = []
+#                 d = {
+#                     "tag": tag,
+#                     "movies": []
+#                 }
+#                 for movie_idx in most_rel:
+#                     img_url = loader.get_image(movie_idx)
+#                     mov = {
+#                         "movie": loader.movie_index_to_description[movie_idx],
+#                         "url": img_url,
+#                         "movie_idx": movie_idx,
+#                         "description": loader.movie_index_to_description[movie_idx]
+#                     }
+#                     if not img_url:
+#                         movies_without_url.append(mov)
+#                     else:
+#                         d["movies"].append(mov)
+#                     if len(d["movies"]) >= NUM_MOVIES_PER_TAG:
+#                         print(f"Achieved: {len(d['movies'])} out of {NUM_MOVIES_PER_TAG} needed")
+#                         break
                 
-                if len(d["movies"]) < NUM_MOVIES_PER_TAG:
-                    remaining = NUM_MOVIES_PER_TAG - len(d["movies"])
-                    d["movies"].extend(movies_without_url[:remaining])
+#                 if len(d["movies"]) < NUM_MOVIES_PER_TAG:
+#                     remaining = NUM_MOVIES_PER_TAG - len(d["movies"])
+#                     d["movies"].extend(movies_without_url[:remaining])
                 
-                # d = {
-                #     "tag": tag,
-                #     "movies": [
-                #         {
-                #             "movie": loader.movie_index_to_description[movie_idx],
-                #             "url": get_image(loader.links_df.loc[loader.movie_index_to_id[movie_idx]].imdbId),
-                #             "movie_idx": movie_idx,
-                #             "description": loader.movie_index_to_description[movie_idx]
-                #         }
-                #         for movie_idx in most_rel
-                #     ]
-                # }
-                #deny_list.update(most_rel)
-                deny_list.update([m["movie_idx"] for m in d["movies"]])
-                print(f"Deny list: {deny_list}")
-                cluster_data[-1]["tags"].append(d)
+#                 # d = {
+#                 #     "tag": tag,
+#                 #     "movies": [
+#                 #         {
+#                 #             "movie": loader.movie_index_to_description[movie_idx],
+#                 #             "url": get_image(loader.links_df.loc[loader.movie_index_to_id[movie_idx]].imdbId),
+#                 #             "movie_idx": movie_idx,
+#                 #             "description": loader.movie_index_to_description[movie_idx]
+#                 #         }
+#                 #         for movie_idx in most_rel
+#                 #     ]
+#                 # }
+#                 #deny_list.update(most_rel)
+#                 deny_list.update([m["movie_idx"] for m in d["movies"]])
+#                 print(f"Deny list: {deny_list}")
+#                 cluster_data[-1]["tags"].append(d)
 
-        print(f"## Adding most relevant movies took: {time.perf_counter() - start_time}")
-        # Result is a list of clusters, each cluster being a dict (JSON object) and having a list of movies and other properties
-        print(f"Cluster data: {cluster_data}")
-        return cluster_data
-    return cluster_data
+#         print(f"## Adding most relevant movies took: {time.perf_counter() - start_time}")
+#         # Result is a list of clusters, each cluster being a dict (JSON object) and having a list of movies and other properties
+#         print(f"Cluster data: {cluster_data}")
+#         return cluster_data
+#     return cluster_data
+
+
+def load_data_1():
+    loader = load_ml_dataset()
+
+    # Get list of items
+    start_time = time.perf_counter()
+    data = MultiObjectiveSamplingFromBucketsElicitation(
+        loader.rating_matrix,
+        loader.similarity_matrix,
+        {
+            "relevance": 2, "diversity": 2, "novelty": 2
+        },
+        {
+            "relevance": [4, 4], "diversity": [4, 4], "novelty": [4, 4]
+        }
+    ).get_initial_data()
+    print(f"Getting initial data took: {time.perf_counter() - start_time}")
+    
+    #print([loader.movie_index_to_description[movie_idx] for movie_idx in data])
+    #print([loader.movies_df.iloc[movie_idx].title for movie_idx in data])
+    start_time = time.perf_counter()
+    res = [loader.movie_index_to_description[movie_idx] for movie_idx in data]
+    #print(f"Movies: {loader.movies_df.movieId.unique().shape}, {loader.links_df.movieId.unique().shape}")
+    #imdbIds = [loader.links_df.loc[loader.movie_index_to_id[movie_idx]].imdbId for movie_idx in data]
+    print(f"Up to now took: {time.perf_counter() - start_time}")
+    start_time = time.perf_counter()
+    #res_url = [loader.get_image(imdbId)["cover url"] for imdbId in imdbIds]
+    res_url = [loader.get_image(movie_idx) for movie_idx in data]
+    print(f"Getting urls took: {time.perf_counter() - start_time}")
+    start_time = time.perf_counter()
+    result = [{"movie": movie, "url": url, "movie_idx": str(movie_idx)} for movie, url, movie_idx in zip(res, res_url, data)]
+    print(f"Result= {result} and took: {time.perf_counter() - start_time}")
+    # Result is a list of movies, each movie being a dict (JSON object)
+    return result
 
 def load_data_2():
     
@@ -734,5 +771,11 @@ if __name__ == "__main__":
     # print(loader.movies_df_indexed.shape, loader.movies_df_indexed.index.unique().shape)
     # print(loader.ratings_df.shape, loader.ratings_df.movieId.unique().shape, loader.ratings_df.userId.unique().shape)
 
-    recommend_2_3([1225, 1244, 927, 1081, 929, 1071, 1269, 1402, 838, 1151])
     
+    # loader = load_ml_dataset()
+    # x = MultiObjectiveSamplingFromBucketsElicitation(loader.rating_matrix, loader.similarity_matrix, {"relevance": 3, "diversity": 2, "novelty": 1}, {"relevance": [4, 4, 4], "diversity": [6, 4], "novelty": [5]})
+    # res = x.get_initial_data()
+    # print(f"Got initial data = {res}")
+    #recommend_2_3([1225, 1244, 927, 1081, 929, 1071, 1269, 1402, 838, 1151])
+    
+    pass

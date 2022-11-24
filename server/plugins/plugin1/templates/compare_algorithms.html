@@ -3,13 +3,11 @@
 <div id="app">
     <b-container fluid>
         <b-jumbotron header="Resulting recommendations" lead="">
-            Please choose all the items that you like (from all columns) and answer questions below the columns.
-            Iteration {{ i }}
+            <p>Please choose all the items that you like (from all columns) and answer questions below the columns.</p>
+            <p><strong>Note</strong> that if movie is present in multiple columns, it is automatically selected for you once you click on any of its occurrences.</p>
+            Iteration {{ iteration }}
         </b-jumbotron>
 
-        <b-row align-h="end">
-            <b-btn class="mr-3">Next</b-btn>
-        </b-row>
         <b-row>
             <b-col v-for="variantResults in variantsResults">
                 <b-row align-h="center">
@@ -17,10 +15,46 @@
                 </b-row>
                 <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
                     <b-col sm="auto" class="align-middle" v-for="col in row">
-                        <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col)" :id="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                        <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                    </b-col>
+                </b-row>
+                <b-row align-h="center">
+                    <b-col sm="4">
+                        <label for="rating-lg" class="mt-3">Satisfaction with the algorithm's output</label>
+                        <b-form-rating show-value show-value-max id="rating-lg" size="lg"></b-form-rating>
                     </b-col>
                 </b-row>
             </b-col>
+        </b-row>
+        <b-row class="mt-5" align-h="center">
+            <b-form-group label="How would you compare the two algorithms?" v-slot="{ ariaDescribedby }">
+                <b-form-radio-group
+                  id="radio-group-2"
+                  :aria-describedby="ariaDescribedby"
+                  name="radio-sub-component"
+                >
+                  <b-form-radio value="first">A1 was significantly better</b-form-radio>
+                  <b-form-radio value="second">A1 was slightly better</b-form-radio>
+                  <b-form-radio value="third">They were about the same</b-form-radio>
+                  <b-form-radio value="fourth">A2 was slightly better</b-form-radio>
+                  <b-form-radio value="fifth">A2 was significantly better</b-form-radio>
+                </b-form-radio-group>
+            </b-form-group>
+        </b-row>
+        <b-row class="text-center mb-5" align-h="center">
+            <b-col>
+                {% if iteration >= MIN_ITERATION_TO_CANCEL %}
+                <b-form method="GET" action="{{ url_for('plugin1.final_questionare') }}">
+                    <b-btn block type="submit" variant="danger" center>Prematurely finish user study</b-btn>
+                </b-form>
+                {% endif %}
+            </b-col>
+            <b-col center class="align-middle">
+                <b-form method="GET" action="{{ url_for('plugin1.algorithm_feedback') }}">
+                    <b-btn type="submit" block variant="primary" center>Next</b-btn>
+                </b-form>
+            </b-col>
+            <b-col></b-col>
         </b-row>
     </b-container>
     

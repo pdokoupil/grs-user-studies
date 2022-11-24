@@ -9,6 +9,8 @@ import os
 
 import pickle
 
+from scipy.spatial.distance import squareform, pdist
+
 # Movie-lens data loader
 
 class RatingUserFilter:
@@ -157,6 +159,7 @@ class MLDataLoader:
 
         self.access = imdb.IMDb()
         self.movie_index_to_url = dict()
+        self.similarity_matrix = None
 
     def _get_image(self, imdbId):
         print("@@ Get movie function")
@@ -290,7 +293,7 @@ class MLDataLoader:
                 self.rating_matrix[self.user_to_user_index[row.userId], self.movie_id_to_index[row.movieId]] = row.rating
             np.save(self.rating_matrix_path, self.rating_matrix)
 
-        
+        self.similarity_matrix = np.float32(squareform(pdist(self.rating_matrix.T, "cosine")))
 
         # Maps movie index to text description
         self.movies_df["description"] = self.movies_df.title + ' ' + self.movies_df.genres

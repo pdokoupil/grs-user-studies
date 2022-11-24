@@ -1,0 +1,37 @@
+{% include 'header.html' %}
+
+<div id="app">
+    <b-container fluid>
+        <b-jumbotron header="Refine the results" lead="">
+            <p>Please adjust/fine-tune the results by moving the sliders below. You can set priority for each of the metrics (improving one will automatically decrease the others)</p>
+            Iteration {{ iteration }}
+        </b-jumbotron>
+        <b-row align-h="center">
+            <b-col sm="3">
+                <b-row>
+                    <label for="range-1">Relevance: [[ relevance ]]</label>
+                    <b-form-input id="range-1" type="range" :formatter="onRelevanceChange" v-model="relevance" min="0" max="100"></b-form-input>
+                    <!-- <div class="mt-2">Value: [[ relevance ]]</div> -->
+                </b-row>
+                <b-row class="mt-3">
+                    <label for="range-2">Diversity: [[ diversity ]]</label>
+                    <b-form-input id="range-2" type="range" v-model="diversity" :formatter="onDiversityChange" min="0" max="100"></b-form-input>
+                    <!-- <div class="mt-2">Value: [[ diversity ]]</div> -->
+                </b-row>
+                <b-row class="mt-3">
+                    <label for="range-3">Novelty: [[ novelty ]]</label>
+                    <b-form-input id="range-3" type="range" v-model="novelty" :formatter="onNoveltyChange" min="0" max="100"></b-form-input>
+                    <!-- <div class="mt-2">Value: [[ novelty ]]</div> -->
+                </b-row>
+                <b-row class="mt-5">
+                    <b-form method="GET" action="{{ url_for('plugin1.refine_results') }}">
+                        <b-btn type="submit" block variant="primary" center>Next</b-btn>
+                    </b-form>
+                </b-row>
+            </b-col>
+        </b-row>
+    </b-container>
+</div>
+
+{{ emit_assets('plugin1','refinement_feedback.js') }}     
+{% include 'footer.html' %}
