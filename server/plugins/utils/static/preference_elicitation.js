@@ -106,11 +106,11 @@ window.app = new Vue({
             if (index > -1) {
                 // Already there, remove it
                 this.selected.splice(index, 1);
-                event.srcElement.parentElement.classList.remove("bg-info");
+                event.srcElement.classList.remove("selected");
             } else {
                 // Not there, insert
                 this.selected.push(item);
-                event.srcElement.parentElement.classList.add("bg-info");
+                event.srcElement.classList.add("selected");
             }
         },
         onRowClicked(item) {

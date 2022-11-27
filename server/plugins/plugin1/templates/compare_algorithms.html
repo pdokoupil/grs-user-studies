@@ -21,7 +21,7 @@
                 <b-row align-h="center">
                     <b-col sm="4">
                         <label for="rating-lg" class="mt-3">Satisfaction with the algorithm's output</label>
-                        <b-form-rating show-value show-value-max id="rating-lg" size="lg"></b-form-rating>
+                        <b-form-rating :state="false" show-value show-value-max id="rating-lg" size="lg"></b-form-rating>
                     </b-col>
                 </b-row>
             </b-col>
@@ -32,6 +32,8 @@
                   id="radio-group-2"
                   :aria-describedby="ariaDescribedby"
                   name="radio-sub-component"
+                  :state="algorithmComparisonState"
+                  v-model="algorithmComparisonValue"
                 >
                   <b-form-radio value="first">A1 was significantly better</b-form-radio>
                   <b-form-radio value="second">A1 was slightly better</b-form-radio>
@@ -45,7 +47,7 @@
             <b-col>
                 {% if iteration >= MIN_ITERATION_TO_CANCEL %}
                 <b-form method="GET" action="{{ url_for('plugin1.final_questionare') }}">
-                    <b-btn block type="submit" variant="danger" center>Prematurely finish user study</b-btn>
+                    <b-btn block type="submit" variant="danger" center>Finish user study</b-btn>
                 </b-form>
                 {% endif %}
             </b-col>

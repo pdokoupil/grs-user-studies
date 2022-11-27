@@ -1,5 +1,4 @@
 {% include 'header.html' %}
-
 <div id="app">
 <b-container >
     <b-jumbotron v-if="{{impl}}==2" :header="jumboHeader" lead="Random sampling based on popularity"></b-jumbotron>
@@ -16,10 +15,9 @@
           <b-row>
             
           </b-row>
-          <b-row align-h="end">
+          <!-- <b-row align-h="end">
             <b-btn v-on:Click="onElicitationFinish(theForm)" :disabled="disableNextStep" variant="primary">Next step</b-btn>
-            <!-- <b-btn href="{{url_for('plugin1.step1')}}" variant="primary">Next step</b-btn> -->
-          </b-row>
+          </b-row> -->
       </b-form-group>
     </b-form>
 
@@ -38,16 +36,21 @@
     <!-- </b-row> -->
 
     <!-- Row and col based implementation -->
-    <b-row class="mb-2 mt-2" align-h="center" align-content="center" v-for="row in rows">
-      <b-col class="align-middle" v-for="col in row">
-        <b-img style="width: 200px; height: auto;" center :src="col.movie.url" v-on:click="onSelectMovie($event, col)" :id="col.movie.idx" :alt="col.movieName" v-b-tooltip.hover :title="col.movieName" />
+    <b-row class="mb-3" align-h="center" align-content="center" v-for="row in rows">
+      <b-col class="mb-3" class="align-middle" v-for="col in row">
+        <b-img class="mb-3" style="width: 200px; height: auto;" center :src="col.movie.url" v-on:click="onSelectMovie($event, col)" :id="col.movie.idx" :alt="col.movieName" v-b-tooltip.hover :title="col.movieName" />
       </b-col>
     </b-row>
-    <br>
+    <!-- <br>
     <br>
     <b-row class="mb-2 mt-2" align-h="center" align-content="center" v-for="row in rows2">
       <b-col class="align-middle" v-for="col in row">
         <b-img style="width: 200px; height: auto;" center :src="col.movie.url" :id="col.movie.idx" :alt="col.movieName" v-b-tooltip.hover :title="col.movieName" />
+      </b-col>
+    </b-row> -->
+    <b-row align-h="center">
+      <b-col sm="3">
+        <b-btn block v-on:Click="onElicitationFinish(theForm)" :disabled="disableNextStep" variant="primary">Next step</b-btn>
       </b-col>
     </b-row>
     <b-row>

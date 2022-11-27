@@ -29,10 +29,15 @@ window.app = new Vue({
         console.log(moviesColumnified);
         return {
             variantsResults: moviesColumnified,
-            selected: []
+            selected: [],
+            algorithmComparisonValue: null
         }
     },
     computed: {
+        algorithmComparisonState() {
+            console.log(this.algorithmComparisonValue);
+            return this.algorithmComparisonValue != null;
+        }
     },
     methods: {
 
