@@ -7,7 +7,9 @@ window.app = new Vue({
         console.log("Called");
         let moviesColumnified = [];
 
-        const colsPerRow = 2;
+        const colsPerRow = itemsPerRow;
+
+        var numAlgorithms = 0;
 
         for (variantIdx in movies) {
             let variantResults = movies[variantIdx];
@@ -25,18 +27,32 @@ window.app = new Vue({
                 variantResultsColumnified.push(row);
             }
             moviesColumnified.push(variantResultsColumnified);
+            ++numAlgorithms;
         }
         console.log(moviesColumnified);
         return {
             variantsResults: moviesColumnified,
             selected: [],
-            algorithmComparisonValue: null
+            algorithmComparisonValue: null,
+            algorithmComparisonValidated: false,
+            numAlgorithms: numAlgorithms,
+            algorithm1Q1Validated: false,
+            algorithm2Q1Validated: false,
+            dontLikeAnythingValue: false
         }
     },
     computed: {
         algorithmComparisonState() {
             console.log(this.algorithmComparisonValue);
+            this.algorithmComparisonValidated = this.algorithmComparisonValue != null;
             return this.algorithmComparisonValue != null;
+        },
+        dontLikeAnythingState() {
+            return this.dontLikeAnythingValue;
+        },
+        allValidated() {
+            let dontLikeAnythingValidated = this.selected.length > 0 || this.dontLikeAnythingValue;
+            return this.algorithmComparisonValidated && this.algorithm1Q1Validated && this.algorithm2Q1Validated && dontLikeAnythingValidated;
         }
     },
     methods: {
@@ -71,6 +87,24 @@ window.app = new Vue({
                 }
                 this.selected.push(item);
             }
+        },
+        onAlgorithmRatingChanged(newRating, algorithmIndex) {
+            if (algorithmIndex == 0) {
+                this.algorithm1Q1Validated = true;
+                this.algorithm1Q1Variant = "success";
+            } else if (algorithmIndex == 1) {
+                this.algorithm2Q1Validated = true;
+                this.algorithm2Q1Variant = "success";
+            }
+        },
+        algorithmQ1Variant(algorithmIndex) {
+            if (algorithmIndex == 0 && this.algorithm1Q1Validated) {
+                return "success";
+            }
+            if (algorithmIndex == 1 && this.algorithm2Q1Validated) {
+                return "success";
+            }
+            return "danger";
         }
     },
     async mounted() {

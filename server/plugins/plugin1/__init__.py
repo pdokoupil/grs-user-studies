@@ -62,7 +62,9 @@ def step1():
 def compare_algorithms():
     movies = [session["movies"]]
     movies.append([movies[0][0]] * len(movies[0]))
-    return render_template("compare_algorithms.html", movies=movies, iteration=session["iteration"], MIN_ITERATION_TO_CANCEL=MIN_ITERATION_TO_CANCEL)
+    result_layout = request.args.get("result_layout")
+    result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
+    return render_template("compare_algorithms.html", movies=movies, iteration=session["iteration"], result_layout=result_layout, MIN_ITERATION_TO_CANCEL=MIN_ITERATION_TO_CANCEL)
 
 @bp.route("/refinement-feedback", methods=["GET"])
 def refinement_feedback():
