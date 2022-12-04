@@ -85,12 +85,17 @@ class MovielensRetrievalModel(tfrs.models.Model):
         # The task computes the loss and the metrics.
         return self.task(user_embeddings, positive_movie_embeddings, compute_metrics=False)
 
-    def predict_for_user(self, user, new_ratings, k=10):
+    def predict_for_user(self, user, new_ratings, filter_out_movie_titles=[], k=10):
 
         # Generate prediction
         seen_movies = set()
         for x in new_ratings:
             seen_movies.add(x["movie_title"].numpy())
+
+        print(f"Seen movies={seen_movies}")
+        seen_movies.update(filter_out_movie_titles)
+        print(f"Seen movies after extension with {filter_out_movie_titles} got ={seen_movies}")
+
         unseen_movies = self._users_unseen_movies(self.movies, seen_movies)
 
         # Create a model that takes in raw query features, and

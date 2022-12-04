@@ -33,6 +33,7 @@ window.app = new Vue({
         return {
             variantsResults: moviesColumnified,
             selected: [],
+            selectedMovieIndices: [],
             algorithmComparisonValue: null,
             algorithmComparisonValidated: false,
             numAlgorithms: numAlgorithms,
@@ -76,17 +77,18 @@ window.app = new Vue({
                 // Already there, remove it
                 var copies = document.getElementsByName(event.srcElement.name);
                 for (let j = 0; j < copies.length; ++j) {
-                    copies[j].parentElement.classList.remove("bg-info");
+                    copies[j].classList.remove("selected");
                 }
                 this.selected.splice(index, 1);
             } else {
                 // Not there, insert
                 var copies = document.getElementsByName(event.srcElement.name);
                 for (let j = 0; j < copies.length; ++j) {
-                    copies[j].parentElement.classList.add("bg-info");
+                    copies[j].classList.add("selected");
                 }
                 this.selected.push(item);
             }
+            this.selectedMovieIndices = this.selected.map((x) => x.movie_idx).join(",");
         },
         onAlgorithmRatingChanged(newRating, algorithmIndex) {
             if (algorithmIndex == 0) {

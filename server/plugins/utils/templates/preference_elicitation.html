@@ -1,6 +1,6 @@
 {% include 'header.html' %}
 <div id="app">
-<b-container >
+<b-container fluid>
     <b-jumbotron v-if="{{impl}}==2" :header="jumboHeader" lead="Random sampling based on popularity"></b-jumbotron>
     <b-jumbotron v-else-if="{{impl}}==3" :header="jumboHeader" lead="Random sampling based on popularity buckets"></b-jumbotron>
     <b-jumbotron v-else-if="{{impl}}==1" :header="jumboHeader" lead="Random sampling based on relevance, diversity and novelty buckets"></b-jumbotron>

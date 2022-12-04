@@ -109,7 +109,12 @@
             </b-col>
             <b-col center class="align-middle">
                 <b-form method="GET" action="{{ url_for('plugin1.algorithm_feedback') }}">
-                    <b-btn type="submit" block variant="primary" :disabled="!allValidated" center>Next</b-btn>
+                    <b-form-group>
+                        <b-input type="text" hidden="true" :value="selectedMovieIndices" name="selected_movies"/>
+                    </b-form-group>
+                    <b-form-group>
+                        <b-btn type="submit" block variant="primary" :disabled="!allValidated" center>Next</b-btn>
+                    </b-form-group>
                 </b-form>
             </b-col>
             <b-col></b-col>

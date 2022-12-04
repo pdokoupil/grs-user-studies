@@ -270,7 +270,7 @@ def load_data_1():
 
     # Get list of items
     start_time = time.perf_counter()
-    data = MultiObjectiveSamplingFromBucketsElicitation(
+    data, extra_data = MultiObjectiveSamplingFromBucketsElicitation(
         loader.rating_matrix,
         loader.similarity_matrix,
         {
@@ -285,7 +285,10 @@ def load_data_1():
     #print([loader.movie_index_to_description[movie_idx] for movie_idx in data])
     #print([loader.movies_df.iloc[movie_idx].title for movie_idx in data])
     start_time = time.perf_counter()
-    res = [loader.movie_index_to_description[movie_idx] for movie_idx in data]
+    # res = [loader.movie_index_to_description[movie_idx] for movie_idx in data]
+    res = [loader.movie_index_to_description[movie_idx] + " # " + extra for movie_idx, extra in zip(data, extra_data)]
+    
+    
     #print(f"Movies: {loader.movies_df.movieId.unique().shape}, {loader.links_df.movieId.unique().shape}")
     #imdbIds = [loader.links_df.loc[loader.movie_index_to_id[movie_idx]].imdbId for movie_idx in data]
     print(f"Up to now took: {time.perf_counter() - start_time}")
@@ -444,7 +447,7 @@ def recommend_1(selected_cluster):
 
 
 
-def recommend_2_3(selected_movies):
+def recommend_2_3(selected_movies, filter_out_movies = []):
     loader = load_ml_dataset()
 
     # algo_als = als.BiasedMF(10, iterations=5)
@@ -471,6 +474,10 @@ def recommend_2_3(selected_movies):
         "user_id": tf.TensorSpec(shape=(), dtype=tf.string)
     })
 
+
+    filter_out_movies_titles = [bytes(loader.movies_df.loc[x].title, "UTF-8") for x in filter_out_movies]
+
+
     for x in ratings2:
         print(f"x={x['movie_title'].numpy()} Is in unique: {x['movie_title'].numpy() in np.unique(np.concatenate(list(model.movies.batch(1000))))}")
     print(f"Uniques: {np.unique(np.concatenate(list(model.movies.batch(1000))))}")
@@ -481,7 +488,7 @@ def recommend_2_3(selected_movies):
     # Finetune
     start_time = time.perf_counter()
     model.fit(ratings2.concatenate(train.take(100)).batch(256), epochs=2)
-    predictions = tf.squeeze(model.predict_for_user(new_user, ratings2)).numpy()
+    predictions = tf.squeeze(model.predict_for_user(new_user, ratings2, filter_out_movies_titles)).numpy()
     print(f"Predictions (AFTER FINETUNING) are: {predictions}")
     print(f"Fine tuning took: {time.perf_counter() - start_time}")
 

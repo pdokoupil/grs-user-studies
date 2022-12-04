@@ -19,7 +19,7 @@ window.app = new Vue({
         handle: false,
         rows: [],
         rows2: [],
-        itemsPerRow: 8,
+        itemsPerRow: 80,
         jumboHeader: "Preference Elicitation",
         disableNextStep: false
     }

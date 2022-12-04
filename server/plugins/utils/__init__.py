@@ -109,6 +109,10 @@ def send_feedback():
     print(f"Recommended items: {recommended_items}")
     flask.session["movies"] = recommended_items
     flask.session["iteration"] = 1
+    # TODO store all these information in DB as well
+    flask.session["elicitation_selected_movies"] = selected_movies
+    print("### zeroing")
+    flask.session["selected_movie_indices"] = [] #dict() # For each iteration, we can store selected movies
     return redirect(url_for("plugin1.compare_algorithms"))
     #return redirect(url_for("plugin1.compare_algorithms", movies=recommended_items))
 

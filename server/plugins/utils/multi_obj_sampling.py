@@ -54,7 +54,8 @@ class MultiObjectiveSamplingFromBucketsElicitation:
 
         n_items_total = sum([sum(l) for l in self.n_samples_per_bucket.values()])
         result = np.zeros((n_items_total, ), dtype=np.int32)
-
+        extra_data = []
+        bucket_idx = 0
 
         offset = 0
 
@@ -68,6 +69,13 @@ class MultiObjectiveSamplingFromBucketsElicitation:
             result[offset:offset+n_samples] = samples
             offset += n_samples
 
+            extra_data.extend([f"relevance_bucket with idx={bucket_idx + 1}/{self.n_buckets['relevance']}"] * n_samples)
+            bucket_idx += 1
+
+
+        bucket_idx = 0
+
+
         # Fill in novelty buckets
         for items_bucket, novelties_bucket, n_samples in zip(
             np.array_split(sorted_items_by_novelty, self.n_buckets["novelty"]),
@@ -78,6 +86,8 @@ class MultiObjectiveSamplingFromBucketsElicitation:
             result[offset:offset+n_samples] = samples
             offset += n_samples
 
+            extra_data.extend([f"novelty_bucket with idx={bucket_idx + 1}/{self.n_buckets['novelty']}"] * n_samples)
+            bucket_idx += 1
 
         # Calculate diversities
         #similarity_matrix = np.float32(squareform(pdist(self.rating_matrix.T, "cosine")))
@@ -106,6 +116,8 @@ class MultiObjectiveSamplingFromBucketsElicitation:
             result[offset:offset+1] = np.random.choice(items_bucket, size=1, p=diversities_bucket/diversities_bucket.sum(), replace=False)
             offset += 1
 
+            extra_data.append(f"diversity_bucket with idx={current_target_bucket + 1}/{self.n_buckets['diversity']}")
+
         # # For each diversity bucket
         # for n_samples in self.n_samples_per_bucket["diversity"]:
         #     # For each item in individual bucket
@@ -133,5 +145,10 @@ class MultiObjectiveSamplingFromBucketsElicitation:
         #     result[offset:offset+n_samples] = samples
         #     offset += n_samples
         
-        np.random.shuffle(result)
-        return result
+        #np.random.shuffle(result)
+        assert len(extra_data) == result.shape[0], f"{len(extra_data)}!={result.shape[0]}"
+        assert result.shape[0] == n_items_total, f"{result.shape[0]}!={n_items_total}"
+
+        p = np.random.permutation(len(extra_data))
+        extra_data = np.array(extra_data)
+        return result[p], extra_data[p]

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import os
+import time
 from flask import Blueprint, jsonify, request, redirect, url_for, make_response, render_template, session
+
+from plugins.utils.preference_elicitation import recommend_2_3
 
 
 __plugin_name__ = "plugin1"
@@ -74,6 +77,16 @@ def refinement_feedback():
 @bp.route("/algorithm-feedback")
 def algorithm_feedback():
     print("Inside algorithm feedback, forwarding to refinement_feedback")
+    # TODO do whatever with the passed parameters and set session variable
+
+    print(session["selected_movie_indices"])
+    selected_movies = request.args.get("selected_movies").split(",")
+    selected_movies = [int(m) for m in selected_movies]
+    x = session["selected_movie_indices"]
+    x.append(selected_movies)
+    session["selected_movie_indices"] = x
+    print(f"Retrieved selected movies for iteration={session['iteration']} are: {session['selected_movie_indices']}")
+    print(session["selected_movie_indices"])
     return redirect(url_for("plugin1.refinement_feedback"))
 
 # We receive feedback from refinement_feedback.html
@@ -82,6 +95,12 @@ def refine_results():
     # Go back to compare algorithms
     print("Inside refine results, increasing iteration and forwarding to compare_algorithms")
     session["iteration"] += 1
+    # Generate new recommendations
+    print(f"Selected movie indices = {session['selected_movie_indices']}")
+    print(f"elicitation selected = {session['elicitation_selected_movies']}")
+    print(f"movies={session['movies']}")
+    filter_out_movies = session["elicitation_selected_movies"] + sum(session["selected_movie_indices"], [])
+    session["movies"] = recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies)
     return redirect(url_for("plugin1.compare_algorithms"))
 
 @bp.route("/final-questionare")
