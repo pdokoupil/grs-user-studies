@@ -19,6 +19,8 @@ NUM_TO_SELECT = 5
 MIN_ITERATION_TO_CANCEL = 5
 TOTAL_ITERATIONS = 8
 
+HIDE_LAST_K = 1000000 # Effectively hides everything
+
 @bp.context_processor
 def plugin_name():
     return {
@@ -59,11 +61,11 @@ def step1():
     # json_data = request.get_json()
     # print(f"Got json: {json_data}")
     # print("After preference elicitation")
-    return render_template("step.html", step_number=1, movies=session["movies"])
+    return render_template("step.html", step_number=1, movies=session["movies"][-1])
 
 @bp.route("/compare-algorithms", methods=["GET"])
 def compare_algorithms():
-    movies = [session["movies"]]
+    movies = [session["movies"][-1]]
     movies.append([movies[0][0]] * len(movies[0]))
     result_layout = request.args.get("result_layout")
     result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
@@ -98,9 +100,12 @@ def refine_results():
     # Generate new recommendations
     print(f"Selected movie indices = {session['selected_movie_indices']}")
     print(f"elicitation selected = {session['elicitation_selected_movies']}")
-    print(f"movies={session['movies']}")
-    filter_out_movies = session["elicitation_selected_movies"] + sum(session["selected_movie_indices"], [])
-    session["movies"] = recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies)
+    print(f"movies={session['movies'][-1]}")
+    mov = session["movies"]
+    mov_indices = [[int(y["movie_idx"]) for y in x] for x in mov]
+    filter_out_movies = session["elicitation_selected_movies"] + sum(mov_indices[:HIDE_LAST_K], []) #sum(session["selected_movie_indices"], [])
+    mov.append(recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies))
+    session["movies"] = mov
     return redirect(url_for("plugin1.compare_algorithms"))
 
 @bp.route("/final-questionare")

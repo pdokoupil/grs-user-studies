@@ -107,7 +107,7 @@ def send_feedback():
 
     #return recommended_items
     print(f"Recommended items: {recommended_items}")
-    flask.session["movies"] = recommended_items
+    flask.session["movies"] = [recommended_items]
     flask.session["iteration"] = 1
     # TODO store all these information in DB as well
     flask.session["elicitation_selected_movies"] = selected_movies
