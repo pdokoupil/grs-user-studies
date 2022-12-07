@@ -18,8 +18,10 @@ class PopularitySamplingFromBucketsElicitation:
         #  Umocnit na K
         return np.power(np.sum(rating_matrix > 0.0, axis=0) / rating_matrix.shape[0], self.k)
 
-    def get_initial_data(self):
+    def get_initial_data(self, movie_indices_to_ignore=[]):
         popularities = self._calculate_item_popularities(self.rating_matrix)
+        if movie_indices_to_ignore:
+            popularities[np.array(movie_indices_to_ignore)] = 0.0 # This will cause that ignore items wont be sampled
         indices = np.argsort(-popularities)
         sorted_popularities = popularities[indices]
         sorted_items = np.arange(popularities.shape[0])[indices]
@@ -55,8 +57,10 @@ class PopularitySamplingElicitation:
 
 
     # Returns data to be shown to the user
-    def get_initial_data(self):
+    def get_initial_data(self, movie_indices_to_ignore=[]):
         popularities = self._calculate_item_popularities(self.rating_matrix)
+        if movie_indices_to_ignore:
+            popularities[np.array(movie_indices_to_ignore)] = 0.0 # This will cause that ignore items wont be sampled
         p_popularities = popularities / popularities.sum()
         print(f"Popularities = {popularities}")
         print(f"p_popularities = {p_popularities}")

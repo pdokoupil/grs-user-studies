@@ -34,6 +34,27 @@
       </template>
       </b-table> -->
     <!-- </b-row> -->
+    <b-row class="mb-3" align-h="center">
+      <b-col></b-col>
+      <b-col align-h="center">
+        <b-row>
+          <b-col><b-input @update="onUpdateSearchMovieName" v-model="searchMovieName" type="search" placeholder="Enter movie name"></b-input></b-col>
+        </b-row>
+      </b-col>
+      <b-col align-h="start">
+        <b-row>
+          <div class="mr-1">
+            <b-btn v-on:click="onClickSearch" variant="primary">Search</b-btn>
+          </div>
+          <div class="mr-5">
+            <b-btn :disabled="!itemsBackup" v-on:click="onClickCancelSearch" variant="warning">Cancel search</b-btn>
+          </div>
+          <div>
+            <b-btn :disabled="itemsBackup" v-on:click="onClickLoadMore" variant="primary">Load more</b-btn>
+          </div>
+        </b-row>
+      </b-col>
+    </b-row>
 
     <!-- Row and col based implementation -->
     <b-row class="mb-3" align-h="center" align-content="center" v-for="row in rows">

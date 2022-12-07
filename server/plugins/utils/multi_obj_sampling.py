@@ -32,15 +32,20 @@ class MultiObjectiveSamplingFromBucketsElicitation:
     def _calculate_item_novelties(self, rating_matrix):
         return -self._calculate_item_popularities(rating_matrix)
 
-    def get_initial_data(self):
+    def get_initial_data(self, movie_indices_to_ignore=[]):
 
         # We first sample relevance bucket
         # Then we sample novelty bucket
         # And in the very end, we CALCULATE (based on already sampled items) diversity and sample diversity bucket
 
+        movie_indices_to_ignore_np = np.array(movie_indices_to_ignore)
+
         relevances = self._calculate_item_relevances(self.rating_matrix)
         novelties = self._calculate_item_novelties(self.rating_matrix)
 
+        if movie_indices_to_ignore:
+            relevances[movie_indices_to_ignore_np] = 0.0 # This will cause that ignore items wont be sampled
+            novelties[movie_indices_to_ignore_np] = 0.0 # This will cause that ignore items wont be sampled
 
         relevance_indices = np.argsort(-relevances)
         sorted_relevances = relevances[relevance_indices]
@@ -99,6 +104,8 @@ class MultiObjectiveSamplingFromBucketsElicitation:
         for i in range(sum(self.n_samples_per_bucket["diversity"])):
             # Compute "approximate" diversity of each item to the list we have so far
             diversities = distance_matrix[result[:offset]].sum(axis=0)
+            if movie_indices_to_ignore:
+                diversities[movie_indices_to_ignore_np] = 0.0 # This will cause that ignore items wont be sampled
             diversities /= diversities.sum() # Normalize to 1
             
             # Prepare buckets based on diversities of all items w.r.t. CURRENT set of sampled items

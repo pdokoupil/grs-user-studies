@@ -25,6 +25,7 @@ RUN pip install caserecommender
 RUN pip install Flask-PluginKit
 RUN pip install is-safe-url
 RUN pip install aiohttp[speedups]
+RUN pip install IMDbPY
 
 EXPOSE 5000
 

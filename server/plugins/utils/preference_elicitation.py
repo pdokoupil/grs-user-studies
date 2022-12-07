@@ -265,7 +265,7 @@ def prepare_tf_model(loader):
 #     return cluster_data
 
 
-def load_data_1():
+def load_data_1(elicitation_movies):
     loader = load_ml_dataset()
 
     # Get list of items
@@ -279,7 +279,7 @@ def load_data_1():
         {
             "relevance": [4, 4], "diversity": [4, 4], "novelty": [4, 4]
         }
-    ).get_initial_data()
+    ).get_initial_data([int(x["movie_idx"]) for x in elicitation_movies])
     print(f"Getting initial data took: {time.perf_counter() - start_time}")
     
     #print([loader.movie_index_to_description[movie_idx] for movie_idx in data])
@@ -302,13 +302,13 @@ def load_data_1():
     # Result is a list of movies, each movie being a dict (JSON object)
     return result
 
-def load_data_2():
+def load_data_2(elicitation_movies):
     
     loader = load_ml_dataset()
 
     # Get list of items
     start_time = time.perf_counter()
-    data = PopularitySamplingElicitation(loader.rating_matrix, n_samples=16).get_initial_data()
+    data = PopularitySamplingElicitation(loader.rating_matrix, n_samples=16).get_initial_data([int(x["movie_idx"]) for x in elicitation_movies])
     print(f"Getting initial data took: {time.perf_counter() - start_time}")
     
     #print([loader.movie_index_to_description[movie_idx] for movie_idx in data])
@@ -328,10 +328,10 @@ def load_data_2():
     # Result is a list of movies, each movie being a dict (JSON object)
     return result
 
-def load_data_3():
+def load_data_3(elicitation_movies):
     loader = load_ml_dataset()
     # Get list of items
-    data = PopularitySamplingFromBucketsElicitation(loader.rating_matrix, 5, [4]*5).get_initial_data()
+    data = PopularitySamplingFromBucketsElicitation(loader.rating_matrix, 5, [4]*5).get_initial_data([int(x["movie_idx"]) for x in elicitation_movies])
     print([loader.movie_index_to_description[movie_idx] for movie_idx in data])
     print([loader.movies_df.iloc[movie_idx].title for movie_idx in data])
     res = [loader.movie_index_to_description[movie_idx] for movie_idx in data]
@@ -688,6 +688,22 @@ def elicit_preferences(rating_matrix):
     
     #dense_rating_matrix = gen_dense_rating_matrix(rating_matrix)
     #print(dense_rating_matrix)
+
+
+def search_for_movie(attrib, pattern):
+
+    # Map to 
+    if attrib == "movie":
+        attrib = "title"
+
+    loader = load_ml_dataset()
+    found_movies = loader.movies_df[loader.movies_df.title.str.contains(pattern, case=False)]
+    
+    movie_indices = [loader.movie_id_to_index[movie_id] for movie_id in found_movies.movieId.values]
+    res_url = [loader.get_image(movie_idx) for movie_idx in movie_indices]
+    result = [{"movie": movie, "url": url, "movie_idx": str(movie_idx)} for movie, url, movie_idx in zip(found_movies.title.values, res_url, movie_indices)]
+
+    return result
 
 if __name__ == "__main__":
     #y = load_data_1()

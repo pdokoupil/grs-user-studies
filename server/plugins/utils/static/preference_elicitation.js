@@ -21,7 +21,10 @@ window.app = new Vue({
         rows2: [],
         itemsPerRow: 80,
         jumboHeader: "Preference Elicitation",
-        disableNextStep: false
+        disableNextStep: false,
+        searchMovieName: null,
+        itemsBackup: null,
+        rowsBackup: null
     }
     },
     async mounted() {
@@ -29,79 +32,85 @@ window.app = new Vue({
         // Get the number of items user is supposed to select
         console.log(this.items);
         console.log("Querying cluster data");
-        let clusterData = await fetch("/utils/cluster-data-" + this.impl).then((resp) => resp.json()).then((resp) => resp);
+        let data = await fetch("/utils/cluster-data-" + this.impl + "?i=0").then((resp) => resp.json()).then((resp) => resp);
         console.log("DONE")
-        console.log(clusterData);
+        console.log(data);
         
-        //if (this.impl !== "1") {
+        res = this.prepareTable(data);
+        this.rows = res["rows"];
+        this.items = res["items"];
         
+    },
+    methods: {
+        async handlePrefixSearch(movieName) {
+            let foundMovies = await fetch("/utils/movie-search?attrib=movie&pattern="+movieName).then(resp => resp.json());
+            console.log(foundMovies);
+            return foundMovies;
+        },
+        prepareTable(data) {
             let row = [];
-            for (var k in clusterData) {
-                this.items.push({
-                    "movieName": clusterData[k]["movie"],
+            let rows = [];
+            let items = [];
+            for (var k in data) {
+                items.push({
+                    "movieName": data[k]["movie"],
                     "movie": {
-                        "idx": clusterData[k]["movie_idx"],
-                        "url": clusterData[k]["url"]
+                        "idx": data[k]["movie_idx"],
+                        "url": data[k]["url"]
                     }
                 });
                 row.push({
-                    "movieName": clusterData[k]["movie"],
+                    "movieName": data[k]["movie"],
                     "movie": {
-                        "idx": clusterData[k]["movie_idx"],
-                        "url": clusterData[k]["url"]
+                        "idx": data[k]["movie_idx"],
+                        "url": data[k]["url"]
                     }
                 });
                 if (row.length >= this.itemsPerRow) {
-                    this.rows.push(row);
+                    rows.push(row);
                     row = [];
                 }
             }
             if (row.length > 0) {
-                this.rows.push(row);
+                rows.push(row);
             }
-        // } else {
-        //     for (var clusterIdx = 0; clusterIdx < clusterData.length; ++clusterIdx) {
-        //         for (var k in clusterData[clusterIdx]["tags"]) {
-        //             let tag = clusterData[clusterIdx]["tags"][k]["tag"];
-        //             let movies = clusterData[clusterIdx]["tags"][k]["movies"];
-        //             let movie_names = movies.map((element) => element.movie);
-        //             console.log(movie_names);
-        //             let movie_urls = movies.map((element) => element.url);
-        //             console.log(movie_urls);
-        //             for (var i in movies) {
-        //                 let movie = movies[i];
-        //                 this.items.push({"cluster": clusterIdx + 1, "tag": tag, "movie": {
-        //                     "idx": movie.movie_idx,
-        //                     "url": movie.url
-        //                 }});
-        //             }
-        //             //this.items.push({"cluster": clusterIdx + 1,"tag": tag, "movies": movie_names.join(";")});
-        //         }
-        //         // Cluster delimiter
-        //         //this.items.push({"cluster": "","tag": "", "movies": "", _rowVariant: 'danger'});
-        //         this.items.push({"cluster": "","tag": "", "movie": "", _rowVariant: 'danger'});
-        //     }
-        // }
-        
 
-        
-    },
-    methods: {
+            return {"rows": rows, "items": items };
+        },
+        async onClickSearch(event) {
+            let data = await this.handlePrefixSearch(this.searchMovieName);
+            let res = this.prepareTable(data);
+            
+            // Do not overwrite backups when doing repeated search
+            if (this.itemsBackup === null) {
+                this.itemsBackup = this.items;
+                this.rowsBackup = this.rows;
+            }
+
+            this.rows = res["rows"];
+            this.items = res["items"];
+        },
+        onClickCancelSearch() {
+            this.items = this.itemsBackup;
+            this.rows = this.rowsBackup;
+            this.itemsBackup = null;
+            this.rowsBackup = null;
+        },
+        async onClickLoadMore() {
+            let data = await fetch("/utils/cluster-data-" + this.impl).then((resp) => resp.json()).then((resp) => resp);
+            res = this.prepareTable(data);
+            this.rows = res["rows"];
+            this.items = res["items"];
+        },
+        onUpdateSearchMovieName(newValue) {
+            console.log(this.searchMovieName);
+        },
         onSelectMovie(event, item) {
             console.log("Hello from ID=" + event.srcElement.id);
             console.log(event.srcElement.cl)
             console.log(event);
             console.log(item.movieName);
 
-            // for (var k in this.items) {
-            //     let item = this.items[k];
-            //     if (item.movie.idx === event.srcElement.id) {
-            //         console.log("Found match");
-            //         console.log(this.items[k]);
-            //         this.items[k]["selected"] = true;
-            //         console.log(this.items[k]);
-            //     }
-            // }
             let index = this.selected.indexOf(item);
             if (index > -1) {
                 // Already there, remove it
@@ -116,49 +125,16 @@ window.app = new Vue({
         onRowClicked(item) {
             console.log("@@@ onRowClicked");
             console.log(item);
-            // if (this.impl === "1") {
-            //     if (this.lastSelectedCluster !== null) {
-            //         // Deselect all the items from that cluster
-            //         // for (var i in this.items) {
-            //         //     if (this.items[i].cluster === this.lastSelectedCluster) {
-            //         //         console.log("Unselecting: " + i);
-            //         //         let idx = parseInt(i, 10);
-            //         //         this.$refs.selectableTable.unselectRow(idx);
-            //         //     }
-            //         // }
-            //         this.$refs.selectableTable.clearSelected();
-            //         // 
-            //     }
-                
-                
-            //     this.lastSelectedCluster = item.cluster;
-            //     console.log(this.lastSelectedCluster);
-            //     let selectedItems = [];
-            //     // Select all items from this cluster
-            //     for (var i in this.items) {
-            //         if (this.items[i].cluster === this.lastSelectedCluster && this.items[i] != item) {
-            //             console.log("Selecting: " + i);
-            //             let idx = parseInt(i, 10);
-            //             this.$refs.selectableTable.selectRow(idx);
-            //             selectedItems.push(this.items[i]);
-            //         }
 
-            //     }
-            //     this.selected = selectedItems;
-
-            //     return;
-            // } else {
                 
-                let index = this.selected.indexOf(item);
-                if (index > -1) {
-                    this.selected.splice(index, 1);
-                    //this.$refs.selectableTable.unselectRow(this.items.indexOf(item));
-                } else {
-                    this.selected.push(item);
-                    //this.$refs.selectableTable.selectRow(this.items.indexOf(item));
-                }
-                
-            // }
+            let index = this.selected.indexOf(item);
+            if (index > -1) {
+                this.selected.splice(index, 1);
+                //this.$refs.selectableTable.unselectRow(this.items.indexOf(item));
+            } else {
+                this.selected.push(item);
+                //this.$refs.selectableTable.selectRow(this.items.indexOf(item));
+            }
         },
         onElicitationFinish(form) {
             let implTag = document.createElement("input");
@@ -174,101 +150,6 @@ window.app = new Vue({
             form.appendChild(selectedMoviesTag);
             console.log(form);
             form.submit();
-            return;
-            if (this.impl === "1") {
-                // let cid = parseInt(this.selected[0].cluster, 10) - 1;
-                // let params = "selectedCluster=" + cid.toString();
-                // console.log("Selected cluster is: " + params);
-                // var recommendations = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
-                // console.log("Got values: " + recommendations);
-                // console.log(recommendations);
-            } else {
-                // let params = "selectedMovies=" + this.selected.map((x) => x.movie.idx).join(",");
-                // console.log("Selected movies are: " + params);
-                // var recommendations = await fetch("/utils/send-feedback?impl=" + this.impl + "&" + params).then((resp) => resp.json()).then((resp) => resp);
-                // console.log("Got values: " + recommendations);
-                // console.log(recommendations);
-                // console.log("GOing to: " + nextStepUrl);
-
-
-                
-                // // let redirected = false;
-
-                // // // Continue with step 1
-                // // let res = await fetch(nextStepUrl,
-                // // {
-                // //     method: "POST",
-                // //     headers: {
-                // //         'Content-Type': 'application/json',
-                // //         'X-CSRFToken': csrfToken
-                // //     },
-                // //     body: JSON.stringify(got),
-                // //     redirect: "follow"
-                // // }
-                // // ).then(response => {
-                // //     if (response.redirected) {
-                // //         console.log(response);
-                // //         window.location.href = response.url;
-                // //         redirected = true;
-                // //     } else {
-                // //         return response.text()
-                // //     }
-                // // });
-
-                // // // Follow link and ensure that URL bar is reloaded as well
-                // // console.log(res);
-                // // if (redirected === false) {
-                // //     console.log("Setting innher html");
-                // //     document.body.innerHTML = res;
-                // //     window.history.pushState("", "", nextStepUrl);
-                // // }
-            }
-            this.jumboHeader = "Resulting Recommendations"
-            for (var i in this.selected) {
-                document.getElementById(this.selected[i].movie.idx).parentElement.classList.remove("bg-info");
-            }
-            this.selected = [];
-            
-            // Update rows
-            this.rows = [];
-            let row = [];
-            this.disableNextStep = true;
-            for (var k in recommendations) {
-                row.push({
-                    "movieName": recommendations[k]["movie"],
-                    "movie": {
-                        "idx": recommendations[k]["movie_idx"],
-                        "url": recommendations[k]["url"]
-                    }
-                });
-                if (row.length >= this.itemsPerRow) {
-                    this.rows.push(row);
-                    row = [];
-                }
-            }
-            if (row.length > 0) {
-                this.rows.push(row);
-            }
-
-
-            // Rows2 are now filled with dummy items
-            row = [];
-            for (var k in recommendations) {
-                row.push({
-                    "movieName": recommendations[0]["movie"],
-                    "movie": {
-                        "idx": recommendations[0]["movie_idx"],
-                        "url": recommendations[0]["url"]
-                    }
-                });
-                if (row.length >= this.itemsPerRow) {
-                    this.rows2.push(row);
-                    row = [];
-                }
-            }
-            if (row.length > 0) {
-                this.rows2.push(row);
-            }
         }
     }
 })

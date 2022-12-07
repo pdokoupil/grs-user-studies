@@ -24,7 +24,7 @@ __author_contact__ = "Patrik.Dokoupil@matfyz.cuni.cz"
 
 bp = Blueprint(__plugin_name__, __plugin_name__, url_prefix=f"/{__plugin_name__}")
 
-from .preference_elicitation import load_data_1, load_data_2, load_data_3, recommend_1, recommend_2_3
+from .preference_elicitation import load_data_1, load_data_2, load_data_3, recommend_1, recommend_2_3, search_for_movie
 
 
 NUM_TO_SELECT = 5
@@ -66,26 +66,42 @@ def join():
 def preference_elicitation():
     json_data =  {} #request.get_json()
     impl = request.args.get("impl") or 1
+    flask.session["elicitation_movies"] = []
+    print("@@ Called")
     return render_template("preference_elicitation.html", impl=impl)
 
 @bp.route("/cluster-data-1", methods=["GET"])
 def cluster_data_1():
     #return json.dumps(load_data_1())
+    el_movies = flask.session["elicitation_movies"]
     
-    x = load_data_1()
-    return jsonify(x)
+    x = load_data_1(el_movies)
+    el_movies.extend(x)
+    flask.session["elicitation_movies"] = el_movies
+
+    # TODO to do lazy loading, return just X and update rows & items in JS directly
+    return jsonify(el_movies)
 
     #return render_template("preference_elicitation.html", **json_data)
 
 @bp.route("/cluster-data-2", methods=["GET"])
 def cluster_data_2():
-    x = load_data_2()
-    return jsonify(x)
+    el_movies = flask.session["elicitation_movies"]
+    
+    x = load_data_2(el_movies)
+    el_movies.extend(x)
+    flask.session["elicitation_movies"] = el_movies
+    return jsonify(el_movies)
 
 @bp.route("/cluster-data-3", methods=["GET"])
 def cluster_data_3():
-    x = load_data_3()
-    return jsonify(x)
+    el_movies = flask.session["elicitation_movies"]
+    
+    x = load_data_3(el_movies)
+    el_movies.extend(x)
+    flask.session["elicitation_movies"] = el_movies
+
+    return jsonify(el_movies)
 
 @bp.route("/send-feedback", methods=["GET"])
 def send_feedback():
@@ -122,6 +138,18 @@ def finish():
     json_data = request.get_json()
     return render_template("finish.html", **json_data)
     
+@bp.route("/movie-search", methods=["GET"])
+def movie_search():
+    attrib = flask.request.args.get("attrib")
+    pattern = flask.request.args.get("pattern")
+    if not attrib or attrib not in ["movie"]: # TODO extend search support
+        return make_response("", 404)
+    if not pattern:
+        return make_response("", 404)
+    
+    res = search_for_movie(attrib, pattern)
+
+    return flask.jsonify(res)
 
 def limit_handler():
     """I am running in before_request"""
