@@ -106,8 +106,7 @@ def compute_once(func):
     return wrapper
 
 @compute_once
-def prepare_tf_model(loader):
-
+def prepare_tf_data(loader):
     ratings_df = loader.ratings_df.copy()
 
     # Add movie_title
@@ -145,13 +144,13 @@ def prepare_tf_model(loader):
 
     cached_train = train.shuffle(100_000).batch(8192).cache()
 
+    return unique_user_ids, unique_movie_titles, movies, cached_train, train
 
+def prepare_tf_model(loader):
+
+    unique_user_ids, unique_movie_titles, movies, cached_train, train = prepare_tf_data(loader)
     model = get_model_25m(unique_user_ids, unique_movie_titles, movies)
-    
-
-
     cache_path = os.path.join(basedir, "static", "ml-latest", "tf_weights_cache")
-
 
     # Try load
     try:
