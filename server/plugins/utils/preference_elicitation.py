@@ -30,10 +30,14 @@ from popularity_sampling import PopularitySamplingElicitation, PopularitySamplin
 from multi_obj_sampling import MultiObjectiveSamplingFromBucketsElicitation
 from tfrs_model import get_model_25m
 
+import requests
+
 import time
 import datetime as dt
 from lenskit.algorithms import Recommender, als, item_knn, user_knn
 
+from PIL import Image
+from io import BytesIO
 
 MOST_RATED_MOVIES_THRESHOLD = 200
 USERS_RATING_RATIO_THRESHOLD = 0.75
@@ -47,6 +51,9 @@ MIN_RATINGS_PER_USER = 500
 MIN_RATINGS_PER_MOVIE = 500
 MIN_TAGS_PER_MOVIE = 50
 
+
+USE_LOCAL_IMAGES = True
+
 import os
 import functools
 cluster_data = None
@@ -56,7 +63,6 @@ print(f"File={__file__}")
 print(f"Dirname: {os.path.dirname(__file__)}")
 
 groups = None
-
 
 # Loads the movielens dataset
 @functools.cache
@@ -74,6 +80,7 @@ def load_ml_dataset(ml_variant="ml-latest"):
         rating_matrix_path = os.path.join(basedir, "static", f"{ml_variant}/rating_matrix.npy")
         tags_path = os.path.join(basedir, "static", f"{ml_variant}/tags.csv")
         links_path = os.path.join(basedir, "static", f"{ml_variant}/links.csv")
+        img_dir_path = os.path.join(basedir, "static", "ml-latest", "img")
         
         start_time = time.perf_counter()
         # loader = MLDataLoader(ratings_path, movies_path, tags_path, links_path,
@@ -82,7 +89,7 @@ def load_ml_dataset(ml_variant="ml-latest"):
         # )
         loader = MLDataLoader(ratings_path, movies_path, tags_path, links_path,
             [RatingLowFilter(4.0), MovieFilterByYear(1990), RatingFilterOld(2010), RatingsPerYearFilter(50.0), RatingUserFilter(100), RatedMovieFilter(), LinkFilter()],
-            rating_matrix_path=rating_matrix_path
+            rating_matrix_path=rating_matrix_path, img_dir_path=img_dir_path
         )
         loader.load()
         print(f"## Loading took: {time.perf_counter() - start_time}")
@@ -800,4 +807,5 @@ if __name__ == "__main__":
     # print(f"Got initial data = {res}")
     #recommend_2_3([1225, 1244, 927, 1081, 929, 1071, 1269, 1402, 838, 1151])
     
+    # loader = load_ml_dataset()
     pass

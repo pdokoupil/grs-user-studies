@@ -11,6 +11,12 @@ import pickle
 
 from scipy.spatial.distance import squareform, pdist
 
+from PIL import Image
+from io import BytesIO
+import requests
+
+from app import pm
+
 # Movie-lens data loader
 
 class RatingUserFilter:
@@ -134,7 +140,7 @@ class LinkFilter:
 
 class MLDataLoader:
     def __init__(self, ratings_path, movies_path, tags_path, links_path,
-        filters = None, rating_matrix_path = None):
+        filters = None, rating_matrix_path = None, img_dir_path = None):
 
         self.ratings_path = ratings_path
         self.movies_path = movies_path
@@ -161,6 +167,8 @@ class MLDataLoader:
         self.movie_index_to_url = dict()
         self.similarity_matrix = None
 
+        self.img_dir_path = img_dir_path        
+
     def _get_image(self, imdbId):
         print("@@ Get movie function")
         try:
@@ -181,7 +189,57 @@ class MLDataLoader:
         self.__dict__.update(state)
         self.access = imdb.IMDb()
 
+    # Download all the images
+    def download_images(self):
+        i = 0
+        start_time = time.perf_counter()
+        for movie_idx, url in self.movie_index_to_url.items():
+            
+            if i % 100 == 0:
+                print(f"{i}/{len(self.movie_index_to_url)} images were downloaded, took: {time.perf_counter() - start_time}")
+                start_time = time.perf_counter()
+
+            movie_id = self.movie_index_to_id[movie_idx]
+            
+            err = False
+            try:
+                resp = requests.get(url, stream=True)
+            except:
+                err = True
+
+            if err or resp.status_code != 200:
+                print(f"Error downloading image from url={url} for movie_id={movie_id}")
+                # Try once more retrieving fresh url for the given movie
+                imdbId = self.links_df.loc[movie_id].imdbId
+                new_url = self._get_image(imdbId)
+
+                err = False
+                try:
+                    resp = requests.get(new_url, stream=True)
+                except:
+                    err = True
+
+                if err or resp.status_code != 200:
+                    print(f"Even new URL={new_url} failed")
+                    continue # Ignore the movie
+                else:
+                    print("New URL succeeded")
+
+            img = Image.open(BytesIO(resp.content))
+            width, height = img.size
+            TARGET_WIDTH = 200
+            coef = TARGET_WIDTH / width
+            new_height = int(height * coef)
+            img = img.resize((TARGET_WIDTH, new_height),Image.ANTIALIAS)
+            img.save(os.path.join(self.img_dir_path, f'{movie_id}.jpg'), quality=90)
+
+            i += 1
+
     def get_image(self, movie_idx):
+        if self.img_dir_path:
+            # Use local version of images
+            return pm.emit_assets('utils', f'ml-latest/img/{self.movie_index_to_id[movie_idx]}.jpg')
+
         return self.movie_index_to_url[movie_idx]
         #movie_id = self.movie_index_to_id[movie_idx]
         #return self._get_image(self.links_df.loc[movie_id].imdbId)
@@ -198,6 +256,8 @@ class MLDataLoader:
             for _, row in group_df.iterrows():
                 self.tag_counts_per_movie[self.movie_id_to_index[group_name]][row.tag] += 1
 
+    # Passing local_movie_images as parameter to prevent cache changes
+    # If local_movie_images==True, we will use local files instead of image urls inside img uris
     def load(self):
 
         
@@ -314,5 +374,9 @@ class MLDataLoader:
                 continue
             movie_idx = self.movie_id_to_index[movie_id]
             self.movie_index_to_url[movie_idx] = self._get_image(row.imdbId)
+
+
+        if self.img_dir_path:
+            self.download_images()        
 
         return True

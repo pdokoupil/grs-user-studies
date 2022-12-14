@@ -38,28 +38,27 @@
       <b-col></b-col>
       <b-col align-h="center">
         <b-row>
-          <b-col><b-input @update="onUpdateSearchMovieName" v-model="searchMovieName" type="search" placeholder="Enter movie name"></b-input></b-col>
+          <b-col><b-input @update="onUpdateSearchMovieName" @keydown="onKeyDownSearchMovieName" v-model="searchMovieName" type="search" placeholder="Enter movie name"></b-input></b-col>
         </b-row>
       </b-col>
       <b-col align-h="start">
         <b-row>
           <div class="mr-1">
-            <b-btn v-on:click="onClickSearch" variant="primary">Search</b-btn>
+            <b-btn v-on:click="onClickSearch" variant="secondary">Search</b-btn>
           </div>
           <div class="mr-5">
             <b-btn :disabled="!itemsBackup" v-on:click="onClickCancelSearch" variant="warning">Cancel search</b-btn>
-          </div>
-          <div>
-            <b-btn :disabled="itemsBackup" v-on:click="onClickLoadMore" variant="primary">Load more</b-btn>
           </div>
         </b-row>
       </b-col>
     </b-row>
 
     <!-- Row and col based implementation -->
+    <!-- Important: setting key prevents vue from aggresively reuse DOM elements
+    See https://stackoverflow.com/questions/46758441/preventing-vue-from-aggresively-reusing-dom-elements -->
     <b-row class="mb-3" align-h="center" align-content="center" v-for="row in rows">
       <b-col class="mb-3" class="align-middle" v-for="col in row">
-        <b-img class="mb-3" style="width: 200px; height: auto;" center :src="col.movie.url" v-on:click="onSelectMovie($event, col)" :id="col.movie.idx" :alt="col.movieName" v-b-tooltip.hover :title="col.movieName" />
+        <b-img :key="col.movie.idx" class="mb-3" style="width: 200px; height: auto;" center :src="col.movie.url" v-on:click="onSelectMovie($event, col)" :id="col.movie.idx" :alt="col.movieName" v-b-tooltip.hover :title="col.movieName" />
       </b-col>
     </b-row>
     <!-- <br>
@@ -70,8 +69,13 @@
       </b-col>
     </b-row> -->
     <b-row align-h="center">
-      <b-col sm="3">
-        <b-btn block v-on:Click="onElicitationFinish(theForm)" :disabled="disableNextStep" variant="primary">Next step</b-btn>
+      <b-col sm="1" align-h="start">
+        <div>
+          <b-btn :disabled="itemsBackup" v-on:click="onClickLoadMore" variant="secondary">Load more movies</b-btn>
+        </div>
+      </b-col>
+      <b-col sm="3" align-h="center">
+        <b-btn block v-on:Click="onElicitationFinish(theForm)" :disabled="disableNextStep" variant="primary">Finish preference elicitation and continue</b-btn>
       </b-col>
     </b-row>
     <b-row>

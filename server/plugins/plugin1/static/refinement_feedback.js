@@ -4,9 +4,15 @@ window.app = new Vue({
     data: function() {
         
         return {
-            relevance: 0,
-            diversity: 0,
-            novelty: 0
+            relevance: defaultRelevance,
+            diversity: defaultDiversity,
+            novelty: defaultNovelty,
+            relevanceValue: null,
+            diversityValue: null,
+            noveltyValue: null,
+            relevanceDelta: 0,
+            diversityDelta: 0,
+            noveltyDelta: 0
         }
     },
     computed: {

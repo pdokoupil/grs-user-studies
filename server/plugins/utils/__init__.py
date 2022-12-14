@@ -62,7 +62,7 @@ def join():
     print(f"Final params={params}")
     return render_template("join.html", **params)
 
-@bp.route("/preference-elicitation", methods=["GET"])
+@bp.route("/preference-elicitation", methods=["GET", "POST"])
 def preference_elicitation():
     json_data =  {} #request.get_json()
     impl = request.args.get("impl") or 1

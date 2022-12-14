@@ -73,7 +73,8 @@ def compare_algorithms():
 
 @bp.route("/refinement-feedback", methods=["GET"])
 def refinement_feedback():
-    return render_template("refinement_feedback.html", iteration=session["iteration"])
+    version = request.args.get("version") or "1"
+    return render_template("refinement_feedback.html", iteration=session["iteration"], version=version, metrics={"relevance": 70, "diversity": 20, "novelty": 10})
 
 # We received feedback from compare_algorithms.html
 @bp.route("/algorithm-feedback")

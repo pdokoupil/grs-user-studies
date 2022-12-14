@@ -46,15 +46,17 @@
         </b-jumbotron>
         <b-row align-h="center">
           <b-col align-h="center" sm="5">
-            <b-form method="POST" action="{{continuation_url}}">
+            <!-- <b-form method="POST" action="{{continuation_url}}"> -->
+            <b-form method="POST" @submit="onSubmit" action="{{continuation_url}}">
               <b-form-group
                 horizontal
               >
+                  <!-- csrf_token is only needed for POST -->
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="email-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="email-help" triggers="hover">TODO email</b-tooltip>
+                      <b-tooltip target="email-help" triggers="hover">Your e-mail address (optional)</b-tooltip>
                     </b-col>
                     <b-col>
                       <b-form-input  name="email" type="email" placeholder="Please enter your email" :value="userEmail"/>
@@ -63,69 +65,86 @@
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="gender-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="gender-help" triggers="hover">TODO gender</b-tooltip>
+                      <b-tooltip target="gender-help" triggers="hover">Your gender (mandatory)</b-tooltip>
                     </b-col>
                     <b-col>
-                      <b-form-select v-model="gender" :options="genders" name="gender" type=""></b-form-select>
+                      <b-form-select v-model="gender" :options="genders" name="gender" :state="gender != null" required="True" type=""></b-form-select>
                     </b-col>
                   </b-row>
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="ageGroup-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="ageGroup-help" triggers="hover">TODO age</b-tooltip>
+                      <b-tooltip target="ageGroup-help" triggers="hover">Your age group (mandatory)</b-tooltip>
                     </b-col>
                     <b-col>
-                      <b-form-select v-model="ageGroup" :options="ageGroups" name="ageGroup" type=""></b-form-select>
+                      <b-form-select v-model="ageGroup" :options="ageGroups" name="ageGroup" :state="ageGroup!= null" required="True" type=""></b-form-select>
                     </b-col>
                   </b-row>
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="education-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="education-help" triggers="hover">TODO education</b-tooltip>
+                      <b-tooltip target="education-help" triggers="hover">Your highest achieved education level (mandatory)</b-tooltip>
                     </b-col>
                     <b-col>
-                      <b-form-select v-model="education" :options="educations" name="education" type=""></b-form-select>
+                      <b-form-select v-model="education" :options="educations" name="education" :state="education != null" required="True" type=""></b-form-select>
                     </b-col>
                   </b-row>
                   <b-row align-v="center" class="mb-3">
                     <b-col align-v="center" class="mr-3 mt-2" sm="1">
                       <b-icon id="mlFamiliar-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="mlFamiliar-help" triggers="hover">TODO ml</b-tooltip>
+                      <b-tooltip target="mlFamiliar-help" triggers="hover">Your experience with machine learning (mandatory)</b-tooltip>
                       
                     </b-col>
                     <b-col align-h="end">
-                      <b-form-select v-model="mlFamiliar" :options="mlFamiliarOptions" name="mlFamiliar" type=""></b-form-select>
+                      <b-form-select v-model="mlFamiliar" :options="mlFamiliarOptions" name="mlFamiliar" :state="mlFamiliar != null" required="True" type=""></b-form-select>
                     </b-col>
                   </b-row>
                   <b-row class="mt-5" align-h="center">
                     <h4>Informed consent</h4>
+                  </b-row>
+                  <b-row align-h="start">
                     <p>
                       Before continuing with the research, you should be familiarize yourself and agree with the following statements:
                     </p>
-                    <p>
-                      I familiarize myself with the aim and targets of the research project (see Help at the top right) and I do not mind to contribute on it (i.e., the research topic does not go against my beliefs etc.). I agree that authors of the project may utilize my (anonymous) responses and my demographic data while presenting research outcomes - e.g. in scientific papers. I do not require any monetary compensation for my participation in the research. (Nonetheless, we will really appreciate your help! Plus, there is a good feeling for helping the science:-))
-                    </p>
-                    <p>
-                      We will never publish data that could breach your identity (we do not have such data anyway:-). We also neither share your e-mail address to third parties nor disclose it publicly (if you opt to provide it). In the prospective paper, we would like to publish an anonymized dataset of responses. The dataset should contain following information
-
-                      randomly generated ID of the participant (i.e. UID = 468201)
-
-                      demographic data of the participant ( age group, education, machine learning familiarity)
-
-                      participant's responses to individual tasks
-
-                    </p>
-                    <p>
-                      In the dataset, there will be no mapping between the ID of the user and his/her true identity (we do not have such data anyway)
-                    </p>
-                    <p>
-                      You can stop your participation at any time (just close the browser window:-). You can always revert your consent to use your responses - just write to us with your details (submitted e-mail, time when you started participation etc.) If you did submit your e-mail, but do not want to receive any new messages from us, just write it to us...
-                    </p>
-                      PS: any disputes (hopefully, non should arise:-) will be governed by the law and jurisdiction of Czech republic
-                    </p>
+                    <ul>
+                      <li>
+                        <p>
+                          I familiarize myself with the aim and targets of the research project (see Help at the top right) and I do not mind to contribute on it (i.e., the research topic does not go against my beliefs etc.). I agree that authors of the project may utilize my (anonymous) responses and my demographic data while presenting research outcomes - e.g. in scientific papers. I do not require any monetary compensation for my participation in the research. (Nonetheless, we will really appreciate your help! Plus, there is a good feeling for helping the science:-))
+                        </p>
+                      </li>
+                      <li>
+                        <p>
+                          We will never publish data that could breach your identity (we do not have such data anyway:-). We also neither share your e-mail address to third parties nor disclose it publicly (if you opt to provide it). In the prospective paper, we would like to publish an anonymized dataset of responses. The dataset should contain following information
+    
+                          randomly generated ID of the participant (i.e. UID = 468201)
+    
+                          demographic data of the participant ( age group, education, machine learning familiarity)
+    
+                          participant's responses to individual tasks
+    
+                        </p>
+                      </li>
+                      <li>
+                        <p>
+                          In the dataset, there will be no mapping between the ID of the user and his/her true identity (we do not have such data anyway)
+                        </p>
+                      </li>
+                      <li>
+                        <p>
+                          You can stop your participation at any time (just close the browser window:-). You can always revert your consent to use your responses - just write to us with your details (submitted e-mail, time when you started participation etc.) If you did submit your e-mail, but do not want to receive any new messages from us, just write it to us...
+                        </p>
+                      </li>
+                      <li>
+                        <p>
+                          PS: any disputes (hopefully, non should arise:-) will be governed by the law and jurisdiction of Czech republic
+                        </p>
+                      </li>
+                    </ul>
+                    
                   </b-row>
                   <b-row  class="mb-3" align-h="end">
-                    <b-btn variant="primary" v-on:click="handleStartUserStudyClick">Start user study</b-btn>
+                    <b-button variant="primary" type="submit">Start user study</b-button>
+                    <!-- <b-btn variant="primary" v-on:click="handleStartUserStudyClick">Start user study</b-btn> -->
                   </b-row>
               </b-form-group>
             </b-form>
@@ -191,14 +210,14 @@
           }
         },
         methods: {
-          async handleStartUserStudyClick() {
+          async onSubmit() {
+            console.log("Submitting");
             console.log("{{continuation_url}}");
             userData = {
               "email": this.userEmail,
               "guid": "{{guid}}"
             };
-            let redirected = false;
-
+            
             let addParticipantRess = await fetch("{{url_for('main.add_participant')}}", {
               method: "POST",
               headers: {
@@ -207,34 +226,52 @@
               },
               body: JSON.stringify({"some_key2": 547}),
             }).then(resp => resp.text());
+          },
+          // async handleStartUserStudyClick() {
+            
+          //   console.log("{{continuation_url}}");
+          //   userData = {
+          //     "email": this.userEmail,
+          //     "guid": "{{guid}}"
+          //   };
+          //   let redirected = false;
 
-            let res = await fetch("{{continuation_url}}",
-              {
-                  method: "POST",
-                  headers: {
-                      'Content-Type': 'application/json',
-                      'X-CSRFToken': '{{ csrf_token() }}'
-                  },
-                  body: JSON.stringify(userData),
-                  redirect: "follow"
-              }
-            ).then(response => {
-                if (response.redirected) {
-                    console.log(response);
-                    window.location.href = response.url;
-                    redirected = true;
-                } else {
-                    return response.text()
-                }
-            });
+          //   let addParticipantRess = await fetch("{{url_for('main.add_participant')}}", {
+          //     method: "POST",
+          //     headers: {
+          //       'Content-Type': 'application/json',
+          //       'X-CSRFToken': '{{ csrf_token() }}'
+          //     },
+          //     body: JSON.stringify({"some_key2": 547}),
+          //   }).then(resp => resp.text());
 
-            // Follow link and ensure that URL bar is reloaded as well
-            console.log(res);
-            if (redirected === false) {
-              document.body.innerHTML = res;
-              window.history.pushState("", "", '{{continuation_url}}');
-            }
-          }
+          //   let res = await fetch("{{continuation_url}}",
+          //     {
+          //         method: "POST",
+          //         headers: {
+          //             'Content-Type': 'application/json',
+          //             'X-CSRFToken': '{{ csrf_token() }}'
+          //         },
+          //         body: JSON.stringify(userData),
+          //         redirect: "follow"
+          //     }
+          //   ).then(response => {
+          //       if (response.redirected) {
+          //           console.log(response);
+          //           window.location.href = response.url;
+          //           redirected = true;
+          //       } else {
+          //           return response.text()
+          //       }
+          //   });
+
+          //   // Follow link and ensure that URL bar is reloaded as well
+          //   console.log(res);
+          //   if (redirected === false) {
+          //     document.body.innerHTML = res;
+          //     window.history.pushState("", "", '{{continuation_url}}');
+          //   }
+          // }
         },
         async mounted() {
           console.log("Mounted was called");

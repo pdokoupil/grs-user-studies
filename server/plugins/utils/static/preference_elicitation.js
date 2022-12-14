@@ -90,6 +90,11 @@ window.app = new Vue({
             this.rows = res["rows"];
             this.items = res["items"];
         },
+        onKeyDownSearchMovieName(e) {
+            if (e.key === "Enter") {
+                this.onClickSearch(null);
+            }
+        },
         onClickCancelSearch() {
             this.items = this.itemsBackup;
             this.rows = this.rowsBackup;
@@ -107,7 +112,7 @@ window.app = new Vue({
         },
         onSelectMovie(event, item) {
             console.log("Hello from ID=" + event.srcElement.id);
-            console.log(event.srcElement.cl)
+            console.log(event.srcElement)
             console.log(event);
             console.log(item.movieName);
 
