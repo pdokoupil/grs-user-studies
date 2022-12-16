@@ -33,7 +33,7 @@ window.app = new Vue({
         return {
             variantsResults: moviesColumnified,
             selected: [],
-            selectedMovieIndices: [],
+            selectedMovieIndices: "",
             algorithmComparisonValue: null,
             algorithmComparisonValidated: false,
             numAlgorithms: numAlgorithms,

@@ -29,6 +29,10 @@ window.app = new Vue({
     },
     async mounted() {
         console.log("Mounted was called {{impl}}");
+        
+        // Register the handler
+        startViewportChangeReportingWithLimit("/plugin1/changed-viewport", csrfToken, 5.0);
+        
         // Get the number of items user is supposed to select
         console.log(this.items);
         console.log("Querying cluster data");

@@ -210,7 +210,8 @@
           }
         },
         methods: {
-          async onSubmit() {
+          async onSubmit(event) {
+            event.preventDefault();
             console.log("Submitting");
             console.log("{{continuation_url}}");
             userData = {
@@ -224,8 +225,18 @@
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token() }}'
               },
-              body: JSON.stringify({"some_key2": 547}),
+              body: JSON.stringify({
+                "user_email": this.userEmail,
+                "gender": this.gender,
+                "age_group": this.ageGroup,
+                "education": this.education,
+                "ml_familiar": this.mlFamiliar,
+                "user_study_id": "{{guid}}"
+              }),
             }).then(resp => resp.text());
+
+            console.log("Final");
+            event.target.submit();
           },
           // async handleStartUserStudyClick() {
             

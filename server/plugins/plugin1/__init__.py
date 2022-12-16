@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+import json
 import os
 import time
 from flask import Blueprint, jsonify, request, redirect, url_for, make_response, render_template, session
 
 from plugins.utils.preference_elicitation import recommend_2_3
+
+from models import Interaction, InteractionType, Participation
+from app import db, pm
+from common import multi_lang
+import glob
 
 
 __plugin_name__ = "plugin1"
@@ -20,6 +27,21 @@ MIN_ITERATION_TO_CANCEL = 5
 TOTAL_ITERATIONS = 8
 
 HIDE_LAST_K = 1000000 # Effectively hides everything
+
+def load_languages():
+    print("PARSING LANGUAGES #########")
+    res = {}
+    for x in glob.glob(os.path.join(os.path.dirname(__file__), "static/languages/*.json")):
+        with open(x, "r", encoding="utf8") as f:
+            res[os.path.splitext(os.path.basename(x))[0]] = json.loads(f.read())
+    return res
+
+languages = load_languages()
+print(f"Languages={languages}")
+
+@bp.before_app_first_request
+def bp_init():
+    print(pm.emit_assets("plugin1", "languages/en.json"))
 
 @bp.context_processor
 def plugin_name():
@@ -50,10 +72,11 @@ def limit():
     #return jsonify(dict(status=0, message="Access Denial"))
 
 @bp.route("/join", methods=["GET"])
+@multi_lang
 def join():
     assert "guid" in request.args, "guid must be available in arguments"
     guid = request.args.get("guid")
-    return redirect(url_for("utils.join", continuation_url=url_for("plugin1.preference_elicitation"), guid=guid))
+    return redirect(url_for("utils.join", continuation_url=url_for("utils.preference_elicitation"), guid=guid))
 
 @bp.route("/step1", methods=["GET", "POST"])
 def step1():
@@ -76,14 +99,30 @@ def refinement_feedback():
     version = request.args.get("version") or "1"
     return render_template("refinement_feedback.html", iteration=session["iteration"], version=version, metrics={"relevance": 70, "diversity": 20, "novelty": 10})
 
+@bp.route("/changed-viewport", methods=["POST"])
+def changed_viewport():
+    print("## Called viewport changed")
+    print(f"Passed data= {request.get_json()}")
+
+    x = Interaction(
+        participation = Participation.query.filter(Participation.id == session["participation_id"]).first(),
+        interaction_type = InteractionType.query.filter(InteractionType.name == "changed-viewport").first(),
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(request.get_json())
+    )
+    db.session.add(x)
+
+    return "OK"
+
 # We received feedback from compare_algorithms.html
 @bp.route("/algorithm-feedback")
 def algorithm_feedback():
     print("Inside algorithm feedback, forwarding to refinement_feedback")
     # TODO do whatever with the passed parameters and set session variable
 
-    print(session["selected_movie_indices"])
-    selected_movies = request.args.get("selected_movies").split(",")
+    selected_movies = request.args.get("selected_movies")
+    selected_movies = selected_movies.split(",") if selected_movies else []
+    print(f"Selected movies={request.args.get('selected_movies')} after split={selected_movies}")
     selected_movies = [int(m) for m in selected_movies]
     x = session["selected_movie_indices"]
     x.append(selected_movies)
@@ -118,6 +157,11 @@ def final_questionare():
 
 @bp.route("/finish-user-study")
 def finish_user_study():
+    print("##########################@@@@@@@@@@@@@@@@@@@@")
+    print(session["participation_id"])
+    # print(Participation.query.filter(Participation.id == session["participation_id"]))
+    Participation.query.filter(Participation.id == session["participation_id"]).update({"time_finished": datetime.datetime.utcnow()})
+    db.session.commit()
     return render_template("finished_user_study.html")
 
 @bp.route("/step2", methods=["GET"])

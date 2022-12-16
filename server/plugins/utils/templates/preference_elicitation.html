@@ -90,6 +90,7 @@
   var nextStepUrl = "{{url_for('plugin1.step1')}}";
   
 </script>
+<script src="{{url_for('static', filename='interaction_reporting.js')}}"></script>
 {{ emit_assets('utils','preference_elicitation.js') }}        
 <script src="{{url_for('static', filename='common.js')}}"></script>
 {% include 'footer.html' %}

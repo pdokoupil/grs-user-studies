@@ -53,10 +53,13 @@ class Participation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # It is not foreign key as the participant could be an anonymous user
     participant_email = db.Column(db.String)
+    age_group = db.Column(db.String)
+    gender = db.Column(db.String)
+    education = db.Column(db.String)
+    ml_familiar = db.Column(db.Boolean)
     user_study_id = db.Column(db.Integer, db.ForeignKey('userstudy.id'))
     time_joined = db.Column(db.DateTime)
     time_finished = db.Column(db.DateTime)
-    interactions = db.Column(db.String)
 
 class LoginForm(FlaskForm):
     email = EmailField('email', validators=[DataRequired("missing mail")])
@@ -67,3 +70,19 @@ class SignupForm(FlaskForm):
     email = EmailField('email', validators=[DataRequired("missing mail")])
     password = PasswordField('password', validators=[DataRequired("missing password"), Length(8, 128, "short password")])
     #submit = SubmitField('Sign up')
+
+class InteractionType(db.Model):
+    __tablename__ = "interactiontype"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+
+class Interaction(db.Model):
+    __tablename__ = "interaction"
+
+    id = db.Column(db.Integer, primary_key=True)
+    # Interactions are tied to participations
+    participation = db.Column(db.Integer, db.ForeignKey("participation.id"))
+    interaction_type = db.Column(db.Integer, db.ForeignKey("interactiontype.id"))
+    # Time when interaction has occurred
+    time = db.Column(db.DateTime)
+    data = db.Column(db.String)

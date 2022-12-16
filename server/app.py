@@ -12,6 +12,27 @@ csrf = CSRFProtect()
 
 sess = Session()
 
+# Insert/set all values that have to be set once (e.g. insert interaction types into DB)
+def initialize_db_tables():
+    from models import InteractionType
+
+    # If it has not been inserted yet, insert selected-item interaction type
+    if db.session.query(
+        db.session.query(InteractionType).filter_by(name='selected-item').exists()
+    ).scalar():
+        x = InteractionType()
+        x.name = "selected-item"
+        db.session.add(x)
+
+    # If it has not been inserted yet, insert changed-viewport type
+    if db.session.query(
+        db.session.query(InteractionType).filter_by(name='changed-viewport').exists()
+    ).scalar():
+        x = InteractionType()
+        x.name = "changed-viewport"
+        db.session.add(x)
+
+
 def create_app():
     app = flask.Flask(__name__)
 
@@ -50,5 +71,6 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        initialize_db_tables()
 
     return app

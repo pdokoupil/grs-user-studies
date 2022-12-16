@@ -142,23 +142,26 @@ def get_user_participated_user_studies():
 # Adds a record that user starts participation in a user study
 @main.route("/add-participant", methods=["POST"])
 def add_participant():
-    print(f"XXXX = {flask.session}")
     json_data = flask.request.get_json()
     print(f"Json data is: {json_data}")
-    return "CCC"
     
     participation = Participation(
-        participant_email=json_data["participant_email"],
+        participant_email=json_data["user_email"],
         user_study_id=json_data["user_study_id"],
         time_joined=datetime.datetime.utcnow(),
         time_finished=None,
-        interactions=dict()
+        age_group=json_data["age_group"],
+        gender=json_data["gender"],
+        education=json_data["education"],
+        ml_familiar=json_data["ml_familiar"]
     )
-
+    print("Participation created")
     db.session.add(participation)
     db.session.commit()
+    
+    flask.session["participation_id"] = participation.id
 
-    return "OK", 200
+    return "OK"
 
 # Global create handler - takes user study settings and creates an user study from it
 # Usually called from the individual plugins' create handlers
