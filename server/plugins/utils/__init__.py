@@ -14,6 +14,11 @@ import flask_wtf.csrf
 import flask
 import json
 
+import datetime
+
+from models import Interaction, InteractionType, Participation
+from app import db
+
 from .popularity_sampling import PopularitySamplingElicitation, PopularitySamplingFromBucketsElicitation
 
 __plugin_name__ = "utils"
@@ -68,7 +73,7 @@ def preference_elicitation():
     impl = request.args.get("impl") or 1
     flask.session["elicitation_movies"] = []
     print("@@ Called")
-    return render_template("preference_elicitation.html", impl=impl)
+    return render_template("preference_elicitation.html", impl=impl, consuming_plugin="plugin1") # TODO remove hardcoded consuming plugin
 
 @bp.route("/cluster-data-1", methods=["GET"])
 def cluster_data_1():
@@ -102,6 +107,69 @@ def cluster_data_3():
     flask.session["elicitation_movies"] = el_movies
 
     return jsonify(el_movies)
+
+
+@bp.route("/changed-viewport", methods=["POST"])
+def changed_viewport():
+    print("## Called viewport changed")
+    print(f"Passed data= {request.get_json()}")
+
+    x = Interaction(
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        interaction_type = "changed-viewport", #InteractionType.query.filter(InteractionType.name == "changed-viewport").first(),
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(request.get_json())
+    )
+    db.session.add(x)
+
+    return "OK"
+
+@bp.route("/selected-item", methods=["POST"])
+def selected_item():
+    print(f"GOT={request.get_json()}")
+    x = Interaction(
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        interaction_type = "selected-item", #InteractionType.query.filter(InteractionType.name == "selected-item").first(),
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(request.get_json())
+    )
+    db.session.add(x)
+    return "OK"
+
+@bp.route("/deselected-item", methods=["POST"])
+def deselected_item():
+    print(f"GOT={request.get_json()}")
+    x = Interaction(
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        interaction_type = "deselected-item", #InteractionType.query.filter(InteractionType.name == "deselected-item").first(),
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(request.get_json())
+    )
+    db.session.add(x)
+    return "OK"
+
+@bp.route("/loaded-page", methods=["POST"])
+def loaded_page():
+    print(f"GOT={request.get_json()}")
+    x = Interaction(
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        interaction_type = "loaded-page", #InteractionType.query.filter(InteractionType.name == "loaded-page").first(),
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(request.get_json())
+    )
+    db.session.add(x)
+    return "OK"
+
+@bp.route("/clicked-button", methods=["POST"])
+def clicked_button():
+    x = Interaction(
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        interaction_type = "clicked-button", #InteractionType.query.filter(InteractionType.name == "clicked-button").first(),
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(request.get_json())
+    )
+    db.session.add(x)
+    return "OK"
 
 @bp.route("/send-feedback", methods=["GET"])
 def send_feedback():

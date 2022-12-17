@@ -159,6 +159,10 @@
 <script type='text/javascript'>
     // Capture JINJA stuff here
     var movies = JSON.parse('{{ movies | tojson | safe}}');
+    var resultLayout = "{{result_layout}}";
+    var iteration = "{{iteration}}";
+    var minIterationToCancel = "{{MIN_ITERATION_TO_CANCEL}}";
+    
     {% if result_layout == "columns" %}
     var itemsPerRow = 2;
     {% elif result_layout == "column-single" %}

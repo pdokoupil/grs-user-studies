@@ -71,10 +71,10 @@ class SignupForm(FlaskForm):
     password = PasswordField('password', validators=[DataRequired("missing password"), Length(8, 128, "short password")])
     #submit = SubmitField('Sign up')
 
-class InteractionType(db.Model):
-    __tablename__ = "interactiontype"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+# class InteractionType(db.Model):
+#     __tablename__ = "interactiontype"
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String)
 
 class Interaction(db.Model):
     __tablename__ = "interaction"
@@ -82,7 +82,9 @@ class Interaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # Interactions are tied to participations
     participation = db.Column(db.Integer, db.ForeignKey("participation.id"))
-    interaction_type = db.Column(db.Integer, db.ForeignKey("interactiontype.id"))
+    # interaction_type = db.Column(db.Integer, db.ForeignKey("interactiontype.id"))
+    interaction_type = db.Column(db.String)
+
     # Time when interaction has occurred
     time = db.Column(db.DateTime)
     data = db.Column(db.String)

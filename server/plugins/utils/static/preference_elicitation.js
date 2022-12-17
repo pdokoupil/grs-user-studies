@@ -29,9 +29,22 @@ window.app = new Vue({
     },
     async mounted() {
         console.log("Mounted was called {{impl}}");
+
+        const btns = document.querySelectorAll(".btn");
         
-        // Register the handler
-        startViewportChangeReportingWithLimit("/plugin1/changed-viewport", csrfToken, 5.0);
+        // This was used for reporting as previously reporting endpoints were defined inside plugin
+        console.log(`Consuming plugin is: ${consumingPlugin}`);
+
+        // Register the handlers for event reporting
+        setGetContextLambda(ctx => {
+            ctx["impl"] = "{{impl}}";
+            return ctx;
+        }); // extend the context a bit
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
+        registerClickedButtonReporting(`/utils/clicked-button`, csrfToken, btns);
+        reportLoadedPage(`/utils/loaded-page`, csrfToken, "preference_elicitation", ()=>{
+            return {"impl":"{{impl}}"};
+        });
         
         // Get the number of items user is supposed to select
         console.log(this.items);
@@ -125,10 +138,12 @@ window.app = new Vue({
                 // Already there, remove it
                 this.selected.splice(index, 1);
                 event.srcElement.classList.remove("selected");
+                reportDeselectedItem(`/utils/deselected-item`, csrfToken, item, this.selected);
             } else {
                 // Not there, insert
                 this.selected.push(item);
                 event.srcElement.classList.add("selected");
+                reportSelectedItem(`/utils/selected-item`, csrfToken, item, this.selected);
             }
         },
         onRowClicked(item) {

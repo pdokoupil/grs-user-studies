@@ -8,7 +8,7 @@ from flask import Blueprint, jsonify, request, redirect, url_for, make_response,
 
 from plugins.utils.preference_elicitation import recommend_2_3
 
-from models import Interaction, InteractionType, Participation
+from models import Interaction, Participation
 from app import db, pm
 from common import multi_lang
 import glob
@@ -92,6 +92,11 @@ def compare_algorithms():
     movies.append([movies[0][0]] * len(movies[0]))
     result_layout = request.args.get("result_layout")
     result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
+
+    # In some sense, we can treat this as iteration start
+    # TODO fix that we have two algorithms, add weights and fix algorithm_assignment (randomly assigning with each iteration)
+    iteration_started(session["iteration"], [0.3,0.3,0.3], movies, {"0": "relevance", "1": "dummy"}, result_layout)
+
     return render_template("compare_algorithms.html", movies=movies, iteration=session["iteration"], result_layout=result_layout, MIN_ITERATION_TO_CANCEL=MIN_ITERATION_TO_CANCEL)
 
 @bp.route("/refinement-feedback", methods=["GET"])
@@ -99,20 +104,6 @@ def refinement_feedback():
     version = request.args.get("version") or "1"
     return render_template("refinement_feedback.html", iteration=session["iteration"], version=version, metrics={"relevance": 70, "diversity": 20, "novelty": 10})
 
-@bp.route("/changed-viewport", methods=["POST"])
-def changed_viewport():
-    print("## Called viewport changed")
-    print(f"Passed data= {request.get_json()}")
-
-    x = Interaction(
-        participation = Participation.query.filter(Participation.id == session["participation_id"]).first(),
-        interaction_type = InteractionType.query.filter(InteractionType.name == "changed-viewport").first(),
-        time = datetime.datetime.utcnow(),
-        data = json.dumps(request.get_json())
-    )
-    db.session.add(x)
-
-    return "OK"
 
 # We received feedback from compare_algorithms.html
 @bp.route("/algorithm-feedback")
@@ -153,6 +144,37 @@ def final_questionare():
     if session["iteration"] < TOTAL_ITERATIONS:
         return render_template("final_questionare.html", iteration=session["iteration"], premature=True)
     return render_template("final_questionare.html", iteration=session["iteration"], premature=False)
+
+
+def iteration_started(iteration, weights, movies, algorithm_assignment, result_layout):
+    data = {
+        "iteration": iteration,
+        "weights": weights,
+        "movies": movies,
+        "algorithm_assignment": algorithm_assignment,
+        "result_layout": result_layout
+    }
+    x = Interaction(
+        participation = Participation.query.filter(Participation.id == session["participation_id"]).first(),
+        interaction_type = "iteration-started",
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(data)
+    )
+    db.session.add(x)
+
+
+def iteration_ended(iteration, selected):
+    data = {
+        "iteration": iteration,
+        "selected": selected
+    }
+    x = Interaction(
+        participation = Participation.query.filter(Participation.id == session["participation_id"]).first(),
+        interaction_type = "iteration-ended",
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(data)
+    )
+    db.session.add(x)
 
 
 @bp.route("/finish-user-study")

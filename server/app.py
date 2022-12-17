@@ -14,23 +14,40 @@ sess = Session()
 
 # Insert/set all values that have to be set once (e.g. insert interaction types into DB)
 def initialize_db_tables():
-    from models import InteractionType
+    pass
+    # from models import InteractionType
 
-    # If it has not been inserted yet, insert selected-item interaction type
-    if db.session.query(
-        db.session.query(InteractionType).filter_by(name='selected-item').exists()
-    ).scalar():
-        x = InteractionType()
-        x.name = "selected-item"
-        db.session.add(x)
+    # # If it has not been inserted yet, insert selected-item interaction type
+    # if db.session.query(
+    #     db.session.query(InteractionType).filter_by(name='selected-item').exists()
+    # ).scalar():
+    #     x = InteractionType()
+    #     x.name = "selected-item"
+    #     db.session.add(x)
 
-    # If it has not been inserted yet, insert changed-viewport type
-    if db.session.query(
-        db.session.query(InteractionType).filter_by(name='changed-viewport').exists()
-    ).scalar():
-        x = InteractionType()
-        x.name = "changed-viewport"
-        db.session.add(x)
+    # # If it has not been inserted yet, insert deselected-item interaction type
+    # if db.session.query(
+    #     db.session.query(InteractionType).filter_by(name='deselected-item').exists()
+    # ).scalar():
+    #     x = InteractionType()
+    #     x.name = "deselected-item"
+    #     db.session.add(x)
+
+    # # If it has not been inserted yet, insert changed-viewport type
+    # if db.session.query(
+    #     db.session.query(InteractionType).filter_by(name='changed-viewport').exists()
+    # ).scalar():
+    #     x = InteractionType()
+    #     x.name = "changed-viewport"
+    #     db.session.add(x)
+
+    # # If it has not been inserted yet, insert clicked-button type
+    # if db.session.query(
+    #     db.session.query(InteractionType).filter_by(name='clicked-button').exists()
+    # ).scalar():
+    #     x = InteractionType()
+    #     x.name = "clicked-button"
+    #     db.session.add(x)
 
 
 def create_app():

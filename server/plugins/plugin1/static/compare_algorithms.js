@@ -72,6 +72,7 @@ window.app = new Vue({
             return -1;
         },
         onSelectMovie(event, item, variant) {
+            item['variant'] = variant;
             let index = this.movieIndexOf(this.selected, item);
             if (index > -1) {
                 // Already there, remove it
@@ -111,5 +112,18 @@ window.app = new Vue({
     },
     async mounted() {
         console.log("Mounted was called");
+        // Register the handlers for event reporting
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
+        registerClickedButtonReporting(`/utils/clicked-button`, csrfToken, btns);
+        reportLoadedPage(`/utils/loaded-page`, csrfToken, "compare_algorithms", ()=>
+            {
+                return {
+                    "result_layout": resultLayout,
+                    "movies": movies,
+                    "iteration": iteration,
+                    "min_iteration_to_cancel": minIterationToCancel
+                };
+            }
+        );
     }
 })
