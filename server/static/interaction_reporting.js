@@ -20,7 +20,7 @@ function getViewportBoundingBox() {
 function getContext(extra="") {
     return {
         "url": window.location.href,
-        "time": String(new Date()),
+        "time": new Date().toISOString(),
         "viewport": getViewportBoundingBox(),
         "extra": extra
     };
@@ -56,6 +56,10 @@ function startViewportChangeReporting(endpoint, csrfToken, initialReport=true, e
     window.addEventListener("scroll", function(e) {
         reportViewportChange(endpoint, csrfToken, extraCtxLambda);
     });
+
+    window.addEventListener("resize", function(e) {
+        reportViewportChange(endpoint, csrfToken, extraCtxLambda);
+    });
 }
 
 
@@ -68,6 +72,7 @@ function startViewportChangeReportingWithLimit(endpoint, csrfToken, timeLimitSec
     }
 
     var lastReported = new Date();
+    var lastReportedViaResie = new Date();
 
     window.addEventListener("scroll", function(e) {
         let now = new Date();
@@ -77,32 +82,69 @@ function startViewportChangeReportingWithLimit(endpoint, csrfToken, timeLimitSec
             lastReported = now;
         }
     });
+
+    window.addEventListener("resize", function(e) {
+        let now = new Date();
+        if ((now - lastReportedViaResie) / 1000 > timeLimitSeconds) {
+            reportViewportChange(endpoint, getViewportBoundingBox(), csrfToken, extraCtxLambda);
+            lastReportedViaResie = now;
+        }
+    });
+}
+
+// Used for reporting clicked buttons, options, checkboxes, ratings, etc.
+function reportOnInput(endpoint, csrfToken, inputType, data, extraCtxLambda=()=>"") {
+    data["context"] = getContext(extraCtxLambda());
+    data["input_type"] = inputType;
+    fetch(endpoint,
+        {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(data),
+            redirect: "follow"
+        }
+    );
 }
 
 function registerClickedButtonReporting(endpoint, csrfToken, btns, extraCtxLambda=()=>"") { 
     btns.forEach(btn => {
-
         btn.addEventListener('click', event => {
-            data = {
+            let data = {
                 "id": event.target.id,
                 "text": event.target.textContent,
-                "name": event.target.name,
-                "context": getContext(extraCtxLambda=()=>"")
+                "name": event.target.name
             };
-            console.log(data);
-            fetch(endpoint,
-                {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(data),
-                    redirect: "follow"
-                }
-            )
+            reportOnInput(endpoint, csrfToken, "button", data, extraCtxLambda);
         });
+    });
+}
 
+function registerClickedCheckboxReporting(endpoint, csrfToken, checkboxes, extraCtxLambda=()=>"") {
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('click', event => {
+            let data = {
+                "id": event.target.id,
+                "checked": event.target.checked,
+                "name": event.target.name
+            };
+            reportOnInput(endpoint, csrfToken, "checkbox", data, extraCtxLambda);
+        });
+    });
+}
+
+function registerClickedRadioReporting(endpoint, csrfToken, radios, extraCtxLambda=()=>"") {
+    radios.forEach(radio => {
+        radio.addEventListener('click', event => {
+            let data = {
+                "id": event.target.id,
+                "value": event.target.value,
+                "name": event.target.name
+            };
+            reportOnInput(endpoint, csrfToken, "radio", data, extraCtxLambda);
+        });
     });
 }
 

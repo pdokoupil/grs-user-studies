@@ -93,7 +93,11 @@
                                 <label for="rating-lg" class="mt-3">Satisfaction with the algorithm's output</label>
                             </b-col>
                             <b-col>
-                                <b-form-rating class="mt-3" :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))" v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))" show-value show-value-max id="rating-lg" size="lg"></b-form-rating>
+                                <b-form-rating
+                                    class="mt-3" :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))"
+                                    v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))"
+                                    show-value show-value-max id="rating-lg" size="lg">
+                                </b-form-rating>
                             </b-col>
                         </b-row>
                         
@@ -162,6 +166,7 @@
     var resultLayout = "{{result_layout}}";
     var iteration = "{{iteration}}";
     var minIterationToCancel = "{{MIN_ITERATION_TO_CANCEL}}";
+    var csrfToken = "{{csrf_token()}}"
     
     {% if result_layout == "columns" %}
     var itemsPerRow = 2;
@@ -175,5 +180,6 @@
     var itemsPerRow = 1000;
     {% endif %}
 </script>
+<script src="{{url_for('static', filename='interaction_reporting.js')}}"></script>
 {{ emit_assets('plugin1','compare_algorithms.js') }}     
 {% include 'footer.html' %}

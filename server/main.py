@@ -145,9 +145,18 @@ def add_participant():
     json_data = flask.request.get_json()
     print(f"Json data is: {json_data}")
     
+    user_study = UserStudy.query.filter(UserStudy.guid == json_data["user_study_guid"]).first()
+
+    if not user_study:
+        return "GUID not found", 404
+    
+    user_study_id = user_study.id
+
+    print(f"from guid={json_data['user_study_guid']} we got id={user_study_id}")
+
     participation = Participation(
         participant_email=json_data["user_email"],
-        user_study_id=json_data["user_study_id"],
+        user_study_id=user_study_id,
         time_joined=datetime.datetime.utcnow(),
         time_finished=None,
         age_group=json_data["age_group"],

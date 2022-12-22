@@ -12,7 +12,8 @@ window.app = new Vue({
             noveltyValue: null,
             relevanceDelta: 0,
             diversityDelta: 0,
-            noveltyDelta: 0
+            noveltyDelta: 0,
+            deltaDescription: ["No attention", "Less attention", "Keep same", "More attention", "Full attention"]
         }
     },
     computed: {
@@ -167,9 +168,82 @@ window.app = new Vue({
             }
 
             return newNov;
+        },
+        onRelevanceDeltaChange(newVal) {
+            reportOnInput("/utils/on-input", csrfToken, "range", {
+                "old_value": this.relevanceDelta,
+                "new_value": newVal,
+                "labels": this.deltaDescription,
+                "metric": "relevance"
+            });
+            return newVal;
+        },
+        onDiversityDeltaChange(newVal) {
+            reportOnInput("/utils/on-input", csrfToken, "range", {
+                "old_value": this.relevanceDelta,
+                "new_value": newVal,
+                "labels": this.deltaDescription,
+                "metric": "diversity"
+            });
+            return newVal;
+        },
+        onNoveltyDeltaChange(newVal) {
+            reportOnInput("/utils/on-input", csrfToken, "range", {
+                "old_value": this.relevanceDelta,
+                "new_value": newVal,
+                "labels": this.deltaDescription,
+                "metric": "novelty"
+            });
+            return newVal;
         }
     },
     async mounted() {
         console.log("Mounted was called");
+        const btns = document.querySelectorAll(".btn");
+        
+        // Register the handlers for event reporting
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
+        registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns);
+        reportLoadedPage(`/utils/loaded-page`, csrfToken, "refinement_feedback", ()=>
+            {
+                data = {
+                    "result_layout": resultLayout, // TODO REPLACE with layout_version 
+                    "initial_weights": {
+                        "relevance": defaultRelevance,
+                        "diversity": defaultDiversity,
+                        "novelty": defaultNovelty
+                    }, // TODO add initial weights
+                    "processed_inputs": {
+                        "relevance": newRelevance,
+                        "diversity": newDiversity,
+                        "novelty": newNovelty
+                    }
+                };
+
+                if (resultLayout == "1") {
+                    data["raw_inputs"] = { // TODO add slider values and new weights
+                        "relevance": relevance,
+                        "diversity": diversity,
+                        "novelty": novelty
+                    }
+                }
+                else if (resultLayout == "2") {
+                    data["raw_inputs"] = {
+                        "relevance": relevanceValue,
+                        "diversity": diversityValue,
+                        "novelty": noveltyValue
+                    }
+                }
+                else if (resultLayout == "3") {
+                    data["raw_inputs"] = { // TODO add slider values and new weights
+                        "relevance": relevanceDelta,
+                        "diversity": diversityDelta,
+                        "novelty": noveltyDelta
+                    }
+                }
+
+                return data;
+            }
+        );
     }
 })

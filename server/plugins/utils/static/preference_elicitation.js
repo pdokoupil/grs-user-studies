@@ -36,12 +36,8 @@ window.app = new Vue({
         console.log(`Consuming plugin is: ${consumingPlugin}`);
 
         // Register the handlers for event reporting
-        setGetContextLambda(ctx => {
-            ctx["impl"] = "{{impl}}";
-            return ctx;
-        }); // extend the context a bit
         startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
-        registerClickedButtonReporting(`/utils/clicked-button`, csrfToken, btns);
+        registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns);
         reportLoadedPage(`/utils/loaded-page`, csrfToken, "preference_elicitation", ()=>{
             return {"impl":"{{impl}}"};
         });

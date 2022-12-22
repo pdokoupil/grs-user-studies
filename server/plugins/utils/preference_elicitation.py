@@ -35,7 +35,7 @@ import requests
 import time
 import datetime as dt
 from lenskit.algorithms import Recommender, als, item_knn, user_knn
-
+from sklearn.preprocessing import QuantileTransformer
 from PIL import Image
 from io import BytesIO
 
@@ -452,6 +452,73 @@ def recommend_1(selected_cluster):
     return res
 
 
+def calculate_weight_estimate(selected_movies, elicitation_movies):
+    loader = load_ml_dataset()
+
+    print(f"Selected movies = {selected_movies}, type={type(selected_movies[0])}")
+    print(f"Elicitation movies = {elicitation_movies}")
+
+    rel = 0
+    div = 0
+    nov = 0
+
+    # relevances = []
+    # diversities = []
+    # novelties = []
+
+    selected_relevances = []
+    selected_diversities = []
+    selected_novelties = []
+
+    distance_matrix = 1.0 - loader.similarity_matrix
+
+    movie_indices = [int(movie["movie_idx"]) for movie in elicitation_movies]
+    diversities = distance_matrix[np.ix_(movie_indices, movie_indices)].reshape((-1, 1)) # Train diversity on this
+    #relevances = loader.rating_matrix[:, movie_indices].T # Train other CDF on this
+    relevances = loader.rating_matrix[:, movie_indices] # Train other CDF on this
+    relevances = relevances[relevances > 0.0]
+    relevances = relevances.reshape((-1, 1))
+    novelties = (loader.rating_matrix.astype(bool).sum(axis=0) / loader.rating_matrix.shape[0]).reshape((-1, 1))
+
+    for movie_idx in movie_indices:
+        # relevances.append(movie["relevance"])
+        # diversities.append(movie["diversity"])
+        # novelties.append(movie["novelty"])
+        if movie_idx in selected_movies:
+            selected_relevances.append(loader.rating_matrix[:, movie_idx].mean()) # TODO try without transposition
+            selected_diversities.append(distance_matrix[movie_idx][movie_indices].mean())
+            selected_novelties.append(loader.rating_matrix[:, movie_idx].astype(bool).sum() / loader.rating_matrix.shape[0])
+            #selected_relevances.append(movie["relevance"])
+            #selected_diversities.append(movie["diversity"])
+            #selected_novelties.append(movie["novelty"])
+    
+    # Take relevance values of all items and train CDF on it
+    # Calculate CDF for relevances of all selected items and take their average
+    rel_cdf = QuantileTransformer()
+    rel_cdf.fit(relevances)
+    rel = np.mean(rel_cdf.transform(np.stack(selected_relevances).reshape(-1, 1)))
+    print(f"Selected relevances = {selected_relevances}")
+    print(f"Rel={rel}")
+
+    # Take diversity values of all items shown during elicitation and train CDF on it
+    # Calculate CDF for diversities of all selected items and take their average
+    div_cdf = QuantileTransformer()
+    div_cdf.fit(diversities)
+    div = np.mean(div_cdf.transform(np.stack(selected_diversities).reshape(-1, 1)))
+
+    # Take novelty values of all items and train CDF on it
+    # Calculate CDF for novelties of all selected items and take their average
+    nov_cdf = QuantileTransformer()
+    nov_cdf.fit(novelties)
+    nov = np.mean(nov_cdf.transform(np.stack(selected_novelties).reshape(-1, 1)))
+
+    return [rel, div, nov]
+
+def rlprop():
+    loader = load_ml_dataset()
+
+
+
 
 def recommend_2_3(selected_movies, filter_out_movies = []):
     loader = load_ml_dataset()
@@ -712,100 +779,60 @@ def search_for_movie(attrib, pattern):
     return result
 
 if __name__ == "__main__":
-    #y = load_data_1()
-    #x = recommend_1(1)
-    #load_data_2()
+    loader = load_ml_dataset()
+    from rlprop_wrapper import RLPropWrapper
+    from normalization.identity import identity
+    from mandate_allocation.exactly_proportional_fuzzy_dhondt_2 import exactly_proportional_fuzzy_dhondt_2
+    import pandas as pd
 
-    # loader = load_ml_dataset()
-    # algo1 = als.ImplicitMF(200, iterations=50)
-    # algo1 = Recommender.adapt(algo1)
+    items = np.arange(loader.rating_matrix.shape[1])
+    distance_matrix = 1.0 - loader.similarity_matrix
+    print(f"Rating matrix min={loader.rating_matrix.min()}, max={loader.rating_matrix.max()}, avg={loader.rating_matrix.mean()}")
+    
+    users_viewed_item = loader.rating_matrix.astype(bool).sum(axis=0)
+    print(f"Total entries = {users_viewed_item.sum()} should equal dataframe size: {loader.ratings_df.shape}")
+    extended_rating_matrix = loader.rating_matrix.copy() # TODO prepare extended rating matrix
+    
+    ratings_df = loader.ratings_df.rename(columns={"movieId": "item", "userId": "user"})
 
-    # algo2 = als.ImplicitMF(200, iterations=50)
-    # algo2 = Recommender.adapt(algo2)
+    algo = als.ImplicitMF(100, iterations=50)
+    algo = Recommender.adapt(algo)
+    algo.fit(ratings_df)
+    
+    start_time = time.perf_counter()
+    item_ids = ratings_df.item.unique()
+    for user_id in ratings_df.user.unique():
+        user_idx = loader.user_to_user_index[user_id]
+        res = algo.predict_for_user(user_id, item_ids)
+        res = ((res - res.min()) / (res.max() - res.min())) * 5.0
+        for item_id, rating in res.iteritems():
+            item_idx = loader.movie_id_to_index[item_id]
+            if extended_rating_matrix[user_idx, item_idx] == 0.0:
+                extended_rating_matrix[user_idx, item_idx] = rating
+    print(f"Took: {time.perf_counter() - start_time}")
+    
+    
+    normalization_factory = identity
+    cache_dir = "."
 
-    # #####
-    # max_user = loader.ratings_df.userId.max()
-    # ratings_df = loader.ratings_df.rename(columns={"movieId": "item", "userId": "user"})
-    # print(ratings_df.tail())
-    # print(max_user + 1)
+    obj_weights = np.array([1.0, 1.0, 1.0])
+    obj_weights /= obj_weights.sum()
+    mandate_allocation = exactly_proportional_fuzzy_dhondt_2(obj_weights, -1e6)
     
+    unseen_items_mask = np.ones(loader.rating_matrix.shape, dtype=np.bool8)
+    unseen_items_mask[loader.rating_matrix > 0.0] = 0 # Mask out already seem items
 
-    # all_animation = loader.tags_df[loader.tags_df.tag == "animation"].movieId.unique()
-    # print(f"All animation = {all_animation}")
-    # selected_movies = [ 50872,  87876,   3745,   8360,  68358,    616,  96281, 177765,
-    #     74553,   4306, 115617,  26662,   5218,  59784,   2355,  55442,
-    #       594,   2137,   7228,  79091] #all_animation[:20]
-    # print(f"Selected movies: {selected_movies}, {[p in all_animation for p in selected_movies]}")
-    # for movie in selected_movies:
-    #     ratings_df.loc[ratings_df.index.max() + 1] = [max_user + 1, movie, 5.0, dt.datetime.now()]
 
-    # print(f"Df shape: {ratings_df.shape}")
-    # ratings_df = ratings_df[ratings_df.rating >= 4.0]
-    # print(f"Df shape after filter: {ratings_df.shape}")
-    # print(f"Extended ratings_df: {ratings_df[ratings_df.user == max_user + 1]}")
-    # ratings_df_extension = ratings_df[ratings_df.user == max_user + 1]
-    
-    # print(f"Loader ratings df: {loader.ratings_df.tail()}")
-    # print(f"Ratings_df: {ratings_df.tail()}")
-    
-    # # print("Starting fit of Algo 1 on all the data including extended")
-    # # algo1 = algo1.fit(ratings_df)
-    # # print("Starting prediction")
-    # # sorted_prediction = algo1.recommend(max_user + 1, n=10)
-    # # print(f"Sorted prediction: {sorted_prediction}")
-    
-    # ### Algo 2
-    # print("Starting fit of algo 2 on loader.ratings_df")
-    # ratings_df = loader.ratings_df.rename(columns={"movieId": "item", "userId": "user"})
-    # print(ratings_df.describe())
-    # print(ratings_df)
-    # start_time = time.perf_counter()
-    # algo2 = algo2.fit(ratings_df)
-    # print(f"Fit took: {time.perf_counter() - start_time}")
-    # print("Starting prediction, the user should be unknown by now")
-    # sorted_prediction = algo2.recommend(max_user + 1, n=10)
-    # print(f"Sorted prediction: {sorted_prediction}")
-    # print("Starting fit of algo 2 on ratings_df_extension")
-    # print(ratings_df_extension.describe())
-    # print(ratings_df_extension)
-    
-    # algo2 = algo2.fit(ratings_df_extension)
-    # print("Starting prediction")
-    # sorted_prediction = algo2.recommend(max_user + 1, n=10)
-    # print(f"Sorted prediction: {sorted_prediction}")
-    
-    
-#    pass
+    discount_sequences = [[1.0] * 10, [1.0] * 10, [1.0] * 10]
 
-    # print("Cache not available, loading everything again")
-    # ml_variant = "ml-latest"
-    # ratings_path = os.path.join(basedir, "static", f"{ml_variant}/ratings.csv")
-    # movies_path = os.path.join(basedir, "static", f"{ml_variant}/movies.csv")
-    # rating_matrix_path = os.path.join(basedir, "static", f"{ml_variant}/rating_matrix.npy")
-    # tags_path = os.path.join(basedir, "static", f"{ml_variant}/tags.csv")
-    # links_path = os.path.join(basedir, "static", f"{ml_variant}/links.csv")
-    
-    # start_time = time.perf_counter()
-    # # loader = MLDataLoader(ratings_path, movies_path, tags_path, links_path,
-    # #     ComposedFunc([RatingMovieFilter(MIN_RATINGS_PER_MOVIE), RatingUserFilter(MIN_RATINGS_PER_USER), RatingTagFilter(MIN_TAGS_PER_MOVIE)]),
-    # #     RatedMovieFilter(), TagsRatedMoviesFilter(), rating_matrix_path=rating_matrix_path
-    # # )
-    # loader = MLDataLoader(ratings_path, movies_path, tags_path, links_path,
-    #     [RatingLowFilter(4.0), MovieFilterByYear(1990), RatingFilterOld(2010), RatingsPerYearFilter(50.0), RatingUserFilter(100), RatedMovieFilter()],
-    #     rating_matrix_path=rating_matrix_path
-    # )
-    # loader.load()
-
-    # print(loader.movies_df.shape, loader.movies_df.movieId.unique().shape)
-    # print(loader.movies_df_indexed.shape, loader.movies_df_indexed.index.unique().shape)
-    # print(loader.ratings_df.shape, loader.ratings_df.movieId.unique().shape, loader.ratings_df.userId.unique().shape)
-
-    
-    # loader = load_ml_dataset()
+    wrapper = RLPropWrapper(items, extended_rating_matrix, distance_matrix, users_viewed_item, normalization_factory, mandate_allocation, unseen_items_mask, cache_dir, discount_sequences)
+    wrapper.init()
+    x = wrapper(10)
+    print(x)
     # x = MultiObjectiveSamplingFromBucketsElicitation(loader.rating_matrix, loader.similarity_matrix, {"relevance": 3, "diversity": 2, "novelty": 1}, {"relevance": [4, 4, 4], "diversity": [6, 4], "novelty": [5]})
     # res = x.get_initial_data()
     # print(f"Got initial data = {res}")
     #recommend_2_3([1225, 1244, 927, 1081, 929, 1071, 1269, 1402, 838, 1151])
     
     # loader = load_ml_dataset()
-    pass
+    # pass

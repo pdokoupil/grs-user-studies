@@ -6,6 +6,7 @@ import re
 from flask import Blueprint, jsonify, request, redirect, current_app, url_for, make_response, render_template
 from flask_login import current_user
 from itsdangerous import URLSafeTimedSerializer
+import numpy as np
 import requests
 from app import csrf
 from common import gen_url_prefix
@@ -16,10 +17,12 @@ import json
 
 import datetime
 
-from models import Interaction, InteractionType, Participation
+from models import Interaction, Participation
 from app import db
 
 from .popularity_sampling import PopularitySamplingElicitation, PopularitySamplingFromBucketsElicitation
+
+
 
 __plugin_name__ = "utils"
 __description__ = "Plugin containing common, shared functionality that can be used from other plugins."
@@ -29,7 +32,7 @@ __author_contact__ = "Patrik.Dokoupil@matfyz.cuni.cz"
 
 bp = Blueprint(__plugin_name__, __plugin_name__, url_prefix=f"/{__plugin_name__}")
 
-from .preference_elicitation import load_data_1, load_data_2, load_data_3, recommend_1, recommend_2_3, search_for_movie
+from .preference_elicitation import load_data_1, load_data_2, load_data_3, recommend_1, recommend_2_3, search_for_movie, rlprop, calculate_weight_estimate
 
 
 NUM_TO_SELECT = 5
@@ -115,12 +118,13 @@ def changed_viewport():
     print(f"Passed data= {request.get_json()}")
 
     x = Interaction(
-        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "changed-viewport", #InteractionType.query.filter(InteractionType.name == "changed-viewport").first(),
         time = datetime.datetime.utcnow(),
         data = json.dumps(request.get_json())
     )
     db.session.add(x)
+    db.session.commit()
 
     return "OK"
 
@@ -128,49 +132,60 @@ def changed_viewport():
 def selected_item():
     print(f"GOT={request.get_json()}")
     x = Interaction(
-        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "selected-item", #InteractionType.query.filter(InteractionType.name == "selected-item").first(),
         time = datetime.datetime.utcnow(),
         data = json.dumps(request.get_json())
     )
     db.session.add(x)
+    db.session.commit()
     return "OK"
 
 @bp.route("/deselected-item", methods=["POST"])
 def deselected_item():
     print(f"GOT={request.get_json()}")
     x = Interaction(
-        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "deselected-item", #InteractionType.query.filter(InteractionType.name == "deselected-item").first(),
         time = datetime.datetime.utcnow(),
         data = json.dumps(request.get_json())
     )
     db.session.add(x)
+    db.session.commit()
     return "OK"
+
+@bp.route("/rl-prop", methods=["GET"])
+def rl_prop():
+    x = rlprop()
+    return x
 
 @bp.route("/loaded-page", methods=["POST"])
 def loaded_page():
     print(f"GOT={request.get_json()}")
     x = Interaction(
-        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "loaded-page", #InteractionType.query.filter(InteractionType.name == "loaded-page").first(),
         time = datetime.datetime.utcnow(),
         data = json.dumps(request.get_json())
     )
     db.session.add(x)
+    db.session.commit()
     return "OK"
 
-@bp.route("/clicked-button", methods=["POST"])
-def clicked_button():
+@bp.route("/on-input", methods=["POST"])
+def on_input():
     x = Interaction(
-        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first(),
-        interaction_type = "clicked-button", #InteractionType.query.filter(InteractionType.name == "clicked-button").first(),
+        participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
+        interaction_type = "on-input",
         time = datetime.datetime.utcnow(),
         data = json.dumps(request.get_json())
     )
     db.session.add(x)
+    db.session.commit()
     return "OK"
 
+
+# Receives arbitrary feedback (typically from preference elicitation) and generates recommendation
 @bp.route("/send-feedback", methods=["GET"])
 def send_feedback():
     print(f"Args={request.args}")
@@ -185,8 +200,15 @@ def send_feedback():
     #     selected_movies = request.args.get("selectedMovies").split(",")
     #     selected_movies = [int(m) for m in selected_movies]
     #     recommended_items = recommend_2_3(selected_movies)
+
+    # Movie indices of selected movies
     selected_movies = request.args.get("selectedMovies").split(",")
     selected_movies = [int(m) for m in selected_movies]
+
+    # Calculate weights based on selection and shown movies during preference elicitation
+    weights = calculate_weight_estimate(selected_movies, flask.session["elicitation_movies"])
+    print(f"### Weights are estimated to {weights}")
+
     recommended_items = recommend_2_3(selected_movies)
 
     #return recommended_items
@@ -197,6 +219,7 @@ def send_feedback():
     flask.session["elicitation_selected_movies"] = selected_movies
     print("### zeroing")
     flask.session["selected_movie_indices"] = [] #dict() # For each iteration, we can store selected movies
+
     return redirect(url_for("plugin1.compare_algorithms"))
     #return redirect(url_for("plugin1.compare_algorithms", movies=recommended_items))
 

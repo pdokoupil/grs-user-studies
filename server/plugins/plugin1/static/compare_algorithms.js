@@ -39,7 +39,9 @@ window.app = new Vue({
             numAlgorithms: numAlgorithms,
             algorithm1Q1Validated: false,
             algorithm2Q1Validated: false,
-            dontLikeAnythingValue: false
+            dontLikeAnythingValue: false,
+            algorithm1Q1Value: 0,
+            algorithm2Q1Value: 0
         }
     },
     computed: {
@@ -92,13 +94,23 @@ window.app = new Vue({
             this.selectedMovieIndices = this.selected.map((x) => x.movie_idx).join(",");
         },
         onAlgorithmRatingChanged(newRating, algorithmIndex) {
+            var oldRating = 0;
             if (algorithmIndex == 0) {
                 this.algorithm1Q1Validated = true;
                 this.algorithm1Q1Variant = "success";
+                oldRating = this.algorithm1Q1Value;
+                this.algorithm1Q1Value = newRating;
             } else if (algorithmIndex == 1) {
                 this.algorithm2Q1Validated = true;
                 this.algorithm2Q1Variant = "success";
+                oldRating = this.algorithm2Q1Value;
+                this.algorithm2Q1Value = newRating;
             }
+            reportOnInput("/utils/on-input", csrfToken, "rating", {
+                "variant": algorithmIndex,
+                "old_rating": oldRating,
+                "new_rating": newRating
+            });
         },
         algorithmQ1Variant(algorithmIndex) {
             if (algorithmIndex == 0 && this.algorithm1Q1Validated) {
@@ -112,9 +124,14 @@ window.app = new Vue({
     },
     async mounted() {
         console.log("Mounted was called");
+        const btns = document.querySelectorAll(".btn");
+        const chckbxs = document.querySelectorAll("input[type=checkbox]");
+        const radios = document.querySelectorAll("input[type=radio]");
         // Register the handlers for event reporting
         startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
-        registerClickedButtonReporting(`/utils/clicked-button`, csrfToken, btns);
+        registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns);
+        registerClickedCheckboxReporting("/utils/on-input", csrfToken, chckbxs);
+        registerClickedRadioReporting("/utils/on-input", csrfToken, radios);
         reportLoadedPage(`/utils/loaded-page`, csrfToken, "compare_algorithms", ()=>
             {
                 return {

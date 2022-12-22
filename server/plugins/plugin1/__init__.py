@@ -83,7 +83,7 @@ def step1():
     # Parameters received from callback (if this is continuation) are in JSON
     # json_data = request.get_json()
     # print(f"Got json: {json_data}")
-    # print("After preference elicitation")
+    print("After preference elicitation")
     return render_template("step.html", step_number=1, movies=session["movies"][-1])
 
 @bp.route("/compare-algorithms", methods=["GET"])
@@ -95,7 +95,7 @@ def compare_algorithms():
 
     # In some sense, we can treat this as iteration start
     # TODO fix that we have two algorithms, add weights and fix algorithm_assignment (randomly assigning with each iteration)
-    iteration_started(session["iteration"], [0.3,0.3,0.3], movies, {"0": "relevance", "1": "dummy"}, result_layout)
+    iteration_started(session["iteration"], [0.3,0.3,0.3], movies, {"0": "relevance", "1": "dummy"}, result_layout, refinement_layout)
 
     return render_template("compare_algorithms.html", movies=movies, iteration=session["iteration"], result_layout=result_layout, MIN_ITERATION_TO_CANCEL=MIN_ITERATION_TO_CANCEL)
 
@@ -137,6 +137,10 @@ def refine_results():
     filter_out_movies = session["elicitation_selected_movies"] + sum(mov_indices[:HIDE_LAST_K], []) #sum(session["selected_movie_indices"], [])
     mov.append(recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies))
     session["movies"] = mov
+
+    # In some sense, session ended here
+    iteration_ended(session["iteration"] - 1, session["selected_movie_indices"], new_weights)    
+
     return redirect(url_for("plugin1.compare_algorithms"))
 
 @bp.route("/final-questionare")
@@ -146,35 +150,39 @@ def final_questionare():
     return render_template("final_questionare.html", iteration=session["iteration"], premature=False)
 
 
-def iteration_started(iteration, weights, movies, algorithm_assignment, result_layout):
+def iteration_started(iteration, weights, movies, algorithm_assignment, result_layout, refinement_layout):
     data = {
         "iteration": iteration,
         "weights": weights,
         "movies": movies,
         "algorithm_assignment": algorithm_assignment,
-        "result_layout": result_layout
+        "result_layout": result_layout,
+        "refinement_layout": refinement_layout
     }
     x = Interaction(
-        participation = Participation.query.filter(Participation.id == session["participation_id"]).first(),
+        participation = Participation.query.filter(Participation.id == session["participation_id"]).first().id,
         interaction_type = "iteration-started",
         time = datetime.datetime.utcnow(),
         data = json.dumps(data)
     )
     db.session.add(x)
+    db.session.commit()
 
 
-def iteration_ended(iteration, selected):
+def iteration_ended(iteration, selected, new_weights):
     data = {
         "iteration": iteration,
-        "selected": selected
+        "selected": selected,
+        "new_weights": new_weights
     }
     x = Interaction(
-        participation = Participation.query.filter(Participation.id == session["participation_id"]).first(),
+        participation = Participation.query.filter(Participation.id == session["participation_id"]).first().id,
         interaction_type = "iteration-ended",
         time = datetime.datetime.utcnow(),
         data = json.dumps(data)
     )
     db.session.add(x)
+    db.session.commit()
 
 
 @bp.route("/finish-user-study")

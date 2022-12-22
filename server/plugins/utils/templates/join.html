@@ -53,6 +53,7 @@
               >
                   <!-- csrf_token is only needed for POST -->
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <b-alert :show="showAlert" variant="danger">[[ alertText ]]</b-alert>
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="email-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
@@ -197,7 +198,9 @@
               { value: null, text: 'Are you familiar with machine learning?' },
               { value: 0, text: 'No' },
               { value: 1, text: 'Yes' }
-            ]
+            ],
+            showAlert: false,
+            alertText: ""
           }
         },
         computed: {
@@ -212,6 +215,9 @@
         methods: {
           async onSubmit(event) {
             event.preventDefault();
+            
+            this.showAlert = false;
+
             console.log("Submitting");
             console.log("{{continuation_url}}");
             userData = {
@@ -219,7 +225,7 @@
               "guid": "{{guid}}"
             };
             
-            let addParticipantRess = await fetch("{{url_for('main.add_participant')}}", {
+            let addParticipantRes = await fetch("{{url_for('main.add_participant')}}", {
               method: "POST",
               headers: {
                 'Content-Type': 'application/json',
@@ -231,12 +237,27 @@
                 "age_group": this.ageGroup,
                 "education": this.education,
                 "ml_familiar": this.mlFamiliar,
-                "user_study_id": "{{guid}}"
+                "user_study_guid": "{{guid}}"
               }),
-            }).then(resp => resp.text());
+            }).then(resp => {
+              if (resp.ok) {
+                return true;
+              }
+              return resp.status;
+            });
 
-            console.log("Final");
-            event.target.submit();
+            if (addParticipantRes === true) {
+              event.target.submit();
+            } else if (addParticipantRes == 404) {
+              // Report guid not found error, check your URL
+              this.showAlert = true;
+              this.alertText = "User study GUID not found, please check your URL"
+            } else {
+              // Report server error, try again later
+              this.showAlert = true;
+              this.alertText = "Server error, please try again later"
+            }
+            
           },
           // async handleStartUserStudyClick() {
             
