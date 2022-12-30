@@ -37,9 +37,13 @@ window.app = new Vue({
 
         // Register the handlers for event reporting
         startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
-        registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns);
+        registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns, ()=>{
+            return {
+                "search_text_box_value": this.searchMovieName
+            };
+        });
         reportLoadedPage(`/utils/loaded-page`, csrfToken, "preference_elicitation", ()=>{
-            return {"impl":"{{impl}}"};
+            return {"impl":impl};
         });
         
         // Get the number of items user is supposed to select
@@ -91,6 +95,7 @@ window.app = new Vue({
             return {"rows": rows, "items": items };
         },
         async onClickSearch(event) {
+            reportOnInput("/utils/on-input", csrfToken, "search", {"search_text_box_value": this.searchMovieName});
             let data = await this.handlePrefixSearch(this.searchMovieName);
             let res = this.prepareTable(data);
             

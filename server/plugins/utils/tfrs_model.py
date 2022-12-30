@@ -95,11 +95,12 @@ class MovielensRetrievalModel(tfrs.models.Model):
         print(f"Seen movies={seen_movies}")
         seen_movies.update(filter_out_movie_titles)
         print(f"Seen movies after extension with {filter_out_movie_titles} got ={seen_movies}")
+        print(f"Num seen movies = {len(seen_movies)}")
 
         unseen_movies = self._users_unseen_movies(self.movies, seen_movies)
 
         # Create a model that takes in raw query features, and
-        index = tfrs.layers.factorized_top_k.BruteForce(self.user_model)
+        index = tfrs.layers.factorized_top_k.BruteForce(self.user_model, k=k)
         # recommends movies out of the entire movies dataset.
         index.index_from_dataset(
             #tf.data.Dataset.zip((movies.batch(100), movies.batch(100).map(model.movie_model)))
@@ -111,6 +112,29 @@ class MovielensRetrievalModel(tfrs.models.Model):
 
 
         return titles[:, :k]
+
+    def predict_all_unseen(self, user, new_ratings, n_items, filter_out_movie_titles=[]):
+        # Generate prediction
+        seen_movies = set()
+        for x in new_ratings:
+            seen_movies.add(x["movie_title"].numpy())
+        seen_movies.update(filter_out_movie_titles)
+        unseen_movies = self._users_unseen_movies(self.movies, seen_movies)
+
+        k = n_items - len(seen_movies)
+
+        # Create a model that takes in raw query features, and
+        index = tfrs.layers.factorized_top_k.BruteForce(self.user_model, k=k)
+        # recommends movies out of the entire movies dataset.
+        index.index_from_dataset(
+            #tf.data.Dataset.zip((movies.batch(100), movies.batch(100).map(model.movie_model)))
+            tf.data.Dataset.zip((unseen_movies.batch(100), unseen_movies.batch(100).map(self.movie_model)))
+        )
+
+        # Get recommendations.
+        scores, titles = index(tf.expand_dims(user, axis=0))
+
+        return scores[:, :k], titles[:, :k]
 
     # User's unseen movies
     def _users_unseen_movies(self, movies, users_seen_movies):

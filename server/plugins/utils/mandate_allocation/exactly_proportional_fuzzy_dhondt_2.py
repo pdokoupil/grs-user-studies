@@ -41,7 +41,7 @@ class exactly_proportional_fuzzy_dhondt_2:
         # Break ties by selecting items with maximal tot_items
         max_gain_items = np.argmax(np.where(gain_items == max_gains, np.squeeze(tot_items), np.NINF), axis=1)
 
-        self.s_r += np.squeeze(np.take_along_axis(masked_supports, max_gain_items[np.newaxis, :, np.newaxis], axis=2))
+        self.s_r += np.squeeze(np.take_along_axis(masked_supports, max_gain_items[np.newaxis, :, np.newaxis], axis=2), axis=2)
         self.tot = np.where(self.s_r >= 0, self.s_r, 0).sum(axis=0) # TODO NEW
         # self.tot = self.s_r.sum(axis=0)
 

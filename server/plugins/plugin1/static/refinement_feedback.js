@@ -10,10 +10,24 @@ window.app = new Vue({
             relevanceValue: null,
             diversityValue: null,
             noveltyValue: null,
-            relevanceDelta: 0,
-            diversityDelta: 0,
-            noveltyDelta: 0,
-            deltaDescription: ["No attention", "Less attention", "Keep same", "More attention", "Full attention"]
+            relevanceDelta: "0",
+            diversityDelta: "0",
+            noveltyDelta: "0",
+            deltaDescription: [
+                "No attention",
+                "Much less attention",
+                "Less attention",
+                "Slightly less attention",
+                "Keep same",
+                "Slightly more attention",
+                "More attention",
+                "Much more attention",
+                "Full attention"
+            ],
+            newWeights: "",
+            newRelevance: 0,
+            newDiversity: 0,
+            newNovelty: 0
         }
     },
     computed: {
@@ -195,7 +209,38 @@ window.app = new Vue({
                 "metric": "novelty"
             });
             return newVal;
-        }
+        },
+        onSubmit(event) {
+            event.preventDefault();
+            
+            const MAX_SHARE = 0.8; // We can increase at most by this share of the remaining and decrease atmost by this share of current value
+            
+            let relDelta = parseFloat(this.relevanceDelta);
+            let relOfMaxShare = 0.25 * relDelta; 
+
+            let divDelta = parseFloat(this.diversityDelta);
+            let divOfMaxShare = 0.25 * divDelta;
+
+            let novDelta = parseFloat(this.noveltyDelta);
+            let novOfMaxShare = 0.25 * novDelta;
+
+            let baseRel = relDelta > 0 ? ((1.0 - defaultRelevance) * MAX_SHARE) : defaultRelevance * MAX_SHARE;
+            let baseDiv = divDelta > 0 ? ((1.0 - defaultDiversity) * MAX_SHARE) : defaultDiversity * MAX_SHARE;
+            let baseNov = novDelta > 0 ? ((1.0 - defaultNovelty) * MAX_SHARE) : defaultNovelty * MAX_SHARE;
+
+            this.newRelevance = defaultRelevance + relOfMaxShare * baseRel;
+            this.newDiversity = defaultDiversity + divOfMaxShare * baseDiv;
+            this.newNovelty = defaultNovelty + novOfMaxShare * baseNov;
+
+            let sum = this.newRelevance + this.newDiversity + this.newNovelty;
+
+            this.newWeights = `${this.newRelevance/sum},${this.newDiversity/sum},${this.newNovelty/sum}`;
+            
+            //console.log(`Old weights: ${defaultRelevance},${defaultDiversity},${defaultNovelty}`);
+            //console.log(`New weights: ${this.newWeights}`);
+
+            event.target.submit();
+        },
     },
     async mounted() {
         console.log("Mounted was called");
@@ -214,31 +259,31 @@ window.app = new Vue({
                         "novelty": defaultNovelty
                     }, // TODO add initial weights
                     "processed_inputs": {
-                        "relevance": newRelevance,
-                        "diversity": newDiversity,
-                        "novelty": newNovelty
+                        "relevance": this.newRelevance,
+                        "diversity": this.newDiversity,
+                        "novelty": this.newNovelty
                     }
                 };
 
                 if (resultLayout == "1") {
                     data["raw_inputs"] = { // TODO add slider values and new weights
-                        "relevance": relevance,
-                        "diversity": diversity,
-                        "novelty": novelty
+                        "relevance": this.relevance,
+                        "diversity": this.diversity,
+                        "novelty": this.novelty
                     }
                 }
                 else if (resultLayout == "2") {
                     data["raw_inputs"] = {
-                        "relevance": relevanceValue,
-                        "diversity": diversityValue,
-                        "novelty": noveltyValue
+                        "relevance": this.relevanceValue,
+                        "diversity": this.diversityValue,
+                        "novelty": this.noveltyValue
                     }
                 }
                 else if (resultLayout == "3") {
                     data["raw_inputs"] = { // TODO add slider values and new weights
-                        "relevance": relevanceDelta,
-                        "diversity": diversityDelta,
-                        "novelty": noveltyDelta
+                        "relevance": this.relevanceDelta,
+                        "diversity": this.diversityDelta,
+                        "novelty": this.noveltyDelta
                     }
                 }
 

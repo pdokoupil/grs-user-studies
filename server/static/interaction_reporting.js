@@ -26,9 +26,18 @@ function getContext(extra="") {
     };
 }
 
-function reportViewportChange(endpoint, data, csrfToken, extraCtxLambda=()=>"") {
+function reportViewportChange(endpoint, csrfToken, extraCtxLambda=()=>"") {
     data = {
         "viewport": getViewportBoundingBox(),
+        "items": Array.from(document.getElementsByTagName("img")).map(x => {
+            return {
+                "id": x.id, // Corresponds to movie idx
+                "name": x.name,
+                "url": x.src,
+                "title": x.title,
+                "viewport": getElementBoundingBox(x)
+            };
+        }),
         "context": getContext(extraCtxLambda())
     }
     return fetch(endpoint,
@@ -68,7 +77,7 @@ function startViewportChangeReporting(endpoint, csrfToken, initialReport=true, e
 // (this is especially useful if we want to report initial viewport dimensions, before any user action)
 function startViewportChangeReportingWithLimit(endpoint, csrfToken, timeLimitSeconds, initialReport=true, extraCtxLambda=()=>"") {
     if (initialReport === true) {
-        reportViewportChange(endpoint, getViewportBoundingBox(), csrfToken, extraCtxLambda); 
+        reportViewportChange(endpoint, csrfToken, extraCtxLambda); 
     }
 
     var lastReported = new Date();
@@ -76,17 +85,17 @@ function startViewportChangeReportingWithLimit(endpoint, csrfToken, timeLimitSec
 
     window.addEventListener("scroll", function(e) {
         let now = new Date();
-        console.log(endpoint);
         if ((now - lastReported) / 1000 > timeLimitSeconds) {
-            reportViewportChange(endpoint, getViewportBoundingBox(), csrfToken, extraCtxLambda);
+            reportViewportChange(endpoint, csrfToken, extraCtxLambda);
             lastReported = now;
+            console.log(endpoint);
         }
     });
 
     window.addEventListener("resize", function(e) {
         let now = new Date();
         if ((now - lastReportedViaResie) / 1000 > timeLimitSeconds) {
-            reportViewportChange(endpoint, getViewportBoundingBox(), csrfToken, extraCtxLambda);
+            reportViewportChange(endpoint, csrfToken, extraCtxLambda);
             lastReportedViaResie = now;
         }
     });

@@ -6,13 +6,15 @@ import os
 import time
 from flask import Blueprint, jsonify, request, redirect, url_for, make_response, render_template, session
 
-from plugins.utils.preference_elicitation import recommend_2_3
+from plugins.utils.preference_elicitation import recommend_2_3, rlprop, weighted_average
 
 from models import Interaction, Participation
 from app import db, pm
 from common import multi_lang
 import glob
 
+import numpy as np
+import random
 
 __plugin_name__ = "plugin1"
 __version__ = "0.1.0"
@@ -88,21 +90,41 @@ def step1():
 
 @bp.route("/compare-algorithms", methods=["GET"])
 def compare_algorithms():
-    movies = [session["movies"][-1]]
-    movies.append([movies[0][0]] * len(movies[0]))
+    # movies = [session["movies"][-1]]
+    # movies.append([movies[0][0]] * len(movies[0]))
+    algorithm_assignment = {}
+    movies = []
+    for i, algorithm in enumerate(session["movies"].keys()):
+        if session["movies"][algorithm][-1]:
+            # Only non-empty makes it to the results
+            movies.append(session["movies"][algorithm][-1])
+            algorithm_assignment[str(i)] = algorithm
+
+    
+
     result_layout = request.args.get("result_layout")
     result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
 
+    # Decide on next refinement layout
+    refinement_layout = "3" # Use version 3
+    session["refinement_layout"] = refinement_layout
+
     # In some sense, we can treat this as iteration start
     # TODO fix that we have two algorithms, add weights and fix algorithm_assignment (randomly assigning with each iteration)
-    iteration_started(session["iteration"], [0.3,0.3,0.3], movies, {"0": "relevance", "1": "dummy"}, result_layout, refinement_layout)
+    iteration_started(session["iteration"], session["weights"], movies, algorithm_assignment, result_layout, refinement_layout)
 
     return render_template("compare_algorithms.html", movies=movies, iteration=session["iteration"], result_layout=result_layout, MIN_ITERATION_TO_CANCEL=MIN_ITERATION_TO_CANCEL)
 
 @bp.route("/refinement-feedback", methods=["GET"])
 def refinement_feedback():
-    version = request.args.get("version") or "1"
-    return render_template("refinement_feedback.html", iteration=session["iteration"], version=version, metrics={"relevance": 70, "diversity": 20, "novelty": 10})
+    version = request.args.get("version") or session["refinement_layout"] #"1"
+    return render_template("refinement_feedback.html", iteration=session["iteration"], version=version,
+        metrics={
+            "relevance": session["weights"][0],
+            "diversity": session["weights"][1],
+            "novelty": session["weights"][2]
+        }
+    )
 
 
 # We received feedback from compare_algorithms.html
@@ -125,18 +147,68 @@ def algorithm_feedback():
 # We receive feedback from refinement_feedback.html
 @bp.route("/refine-results")
 def refine_results():
+    # Get new weights
+    new_weights = request.args.get("new_weights")
+    new_weights = [float(x) for x in new_weights.split(",")]
+    session["weights"] = new_weights
+
     # Go back to compare algorithms
     print("Inside refine results, increasing iteration and forwarding to compare_algorithms")
     session["iteration"] += 1
     # Generate new recommendations
     print(f"Selected movie indices = {session['selected_movie_indices']}")
     print(f"elicitation selected = {session['elicitation_selected_movies']}")
-    print(f"movies={session['movies'][-1]}")
+    #print(f"movies={session['movies'][-1]}")
     mov = session["movies"]
-    mov_indices = [[int(y["movie_idx"]) for y in x] for x in mov]
-    filter_out_movies = session["elicitation_selected_movies"] + sum(mov_indices[:HIDE_LAST_K], []) #sum(session["selected_movie_indices"], [])
-    mov.append(recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies))
+    
+    # Randomly chose two algorithms
+    algorithms = ["relevance_based", "rlprop", "weighted_average"]
+    assert len(mov[algorithms[0]]) == len(mov[algorithms[1]]) == len(mov[algorithms[2]]), "All algorithms should share the number of iterations"
+    
+    for algorithm in algorithms:
+        mov[algorithm].append([])
+
+    # We always take relevance_based algorithm and add one randomly chosen algorithm to it
+    rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
+    random.shuffle(rnd_algorithms)
+    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
+    print(f"Chosen algorithms = {algorithms}")
+
+    mov_indices = []
+    for i in range(len(mov[algorithms[0]])):
+        indices = set()
+        for algo in algorithms:
+            indices.update([int(y["movie_idx"]) for y in mov[algo][i]])
+        mov_indices.append(list(indices))
+
+    
+    filter_out_movies = session["elicitation_selected_movies"] + sum(mov_indices[:HIDE_LAST_K], [])
+
+    # Always generate recommendation via relevance based algorithm because we need to get the model (we use it as a baseline)
+    recommended_items, model = recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies, return_model=True)    
+
+    # Order of insertion should be preserved
+    for algorithm in algorithms:
+        if algorithm == "relevance_based":
+            pass
+        elif algorithm == "rlprop":
+            recommended_items = rlprop(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], model, np.array(new_weights), filter_out_movies)
+        elif algorithm == "weighted_average":
+            recommended_items = weighted_average(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], model, np.array(new_weights), filter_out_movies)
+        else:
+            assert False
+        mov[algorithm][-1] = recommended_items
+    # END NEW
+
+    # This worked
+    #mov_indices = [[int(y["movie_idx"]) for y in x] for x in mov]
+    #filter_out_movies = session["elicitation_selected_movies"] + sum(mov_indices[:HIDE_LAST_K], []) #sum(session["selected_movie_indices"], [])
+    #mov.append(recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies))
+    
     session["movies"] = mov
+
+
+
 
     # In some sense, session ended here
     iteration_ended(session["iteration"] - 1, session["selected_movie_indices"], new_weights)    

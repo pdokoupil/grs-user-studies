@@ -83,6 +83,7 @@ window.app = new Vue({
                     copies[j].classList.remove("selected");
                 }
                 this.selected.splice(index, 1);
+                reportDeselectedItem(`/utils/deselected-item`, csrfToken, item, this.selected);
             } else {
                 // Not there, insert
                 var copies = document.getElementsByName(event.srcElement.name);
@@ -90,6 +91,7 @@ window.app = new Vue({
                     copies[j].classList.add("selected");
                 }
                 this.selected.push(item);
+                reportSelectedItem(`/utils/selected-item`, csrfToken, item, this.selected);
             }
             this.selectedMovieIndices = this.selected.map((x) => x.movie_idx).join(",");
         },

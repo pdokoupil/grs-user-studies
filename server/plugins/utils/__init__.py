@@ -32,7 +32,7 @@ __author_contact__ = "Patrik.Dokoupil@matfyz.cuni.cz"
 
 bp = Blueprint(__plugin_name__, __plugin_name__, url_prefix=f"/{__plugin_name__}")
 
-from .preference_elicitation import load_data_1, load_data_2, load_data_3, recommend_1, recommend_2_3, search_for_movie, rlprop, calculate_weight_estimate
+from .preference_elicitation import load_data_1, load_data_2, load_data_3, recommend_1, recommend_2_3, search_for_movie, rlprop, weighted_average, calculate_weight_estimate
 
 
 NUM_TO_SELECT = 5
@@ -202,18 +202,52 @@ def send_feedback():
     #     recommended_items = recommend_2_3(selected_movies)
 
     # Movie indices of selected movies
-    selected_movies = request.args.get("selectedMovies").split(",")
+    selected_movies = request.args.get("selectedMovies")
+    selected_movies = selected_movies.split(",") if selected_movies else []
     selected_movies = [int(m) for m in selected_movies]
 
     # Calculate weights based on selection and shown movies during preference elicitation
     weights = calculate_weight_estimate(selected_movies, flask.session["elicitation_movies"])
+    flask.session["weights"] = weights.tolist()
     print(f"### Weights are estimated to {weights}")
 
-    recommended_items = recommend_2_3(selected_movies)
+    # recommended_items = recommend_2_3(selected_movies)
 
-    #return recommended_items
-    print(f"Recommended items: {recommended_items}")
-    flask.session["movies"] = [recommended_items]
+    # #return recommended_items
+    # print(f"Recommended items: {recommended_items}")
+
+    algorithms = ["relevance_based", "rlprop", "weighted_average"]
+    # Add default entries so that even the non-chosen algorithm has an empty entry
+    # to unify later access
+    recommendations = {
+        algo: [[]] for algo in algorithms
+    }
+    
+    # We always take relevance_based algorithm and add one randomly chosen algorithm to it
+    rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
+    random.shuffle(rnd_algorithms)
+    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
+    print(f"Chosen algorithms = {algorithms}")
+    
+
+    # Order of insertion should be preserved
+    recommended_items, model = recommend_2_3(selected_movies, return_model=True)
+    for algorithm in algorithms:
+        if algorithm == "relevance_based":
+            pass
+        elif algorithm == "rlprop":
+            recommended_items = rlprop(selected_movies, model, weights)
+        elif algorithm == "weighted_average":
+            recommended_items = weighted_average(selected_movies, model, weights)
+        else:
+            assert False
+        recommendations[algorithm] = [recommended_items]
+
+    
+    flask.session["movies"] = recommendations
+    #flask.session["movies"] = [recommended_items]
+    
+    
     flask.session["iteration"] = 1
     # TODO store all these information in DB as well
     flask.session["elicitation_selected_movies"] = selected_movies

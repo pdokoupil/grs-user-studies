@@ -39,6 +39,14 @@ from sklearn.preprocessing import QuantileTransformer
 from PIL import Image
 from io import BytesIO
 
+
+from rlprop_wrapper import RLPropWrapper
+from normalization.identity import identity
+from normalization.cdf import cdf
+from normalization.standardization import standardization
+from mandate_allocation.exactly_proportional_fuzzy_dhondt_2 import exactly_proportional_fuzzy_dhondt_2
+from mandate_allocation.weighted_average_strategy import weighted_average_strategy
+
 MOST_RATED_MOVIES_THRESHOLD = 200
 USERS_RATING_RATIO_THRESHOLD = 0.75
 NUM_TAGS_PER_GROUP = 3
@@ -453,9 +461,13 @@ def recommend_1(selected_cluster):
 
 
 def calculate_weight_estimate(selected_movies, elicitation_movies):
+    if not selected_movies:
+        x = np.array([1.0, 1.0, 1.0])
+        return x / x.sum()
+
     loader = load_ml_dataset()
 
-    print(f"Selected movies = {selected_movies}, type={type(selected_movies[0])}")
+    print(f"Selected movies = {selected_movies}")
     print(f"Elicitation movies = {elicitation_movies}")
 
     rel = 0
@@ -473,21 +485,34 @@ def calculate_weight_estimate(selected_movies, elicitation_movies):
     distance_matrix = 1.0 - loader.similarity_matrix
 
     movie_indices = [int(movie["movie_idx"]) for movie in elicitation_movies]
-    diversities = distance_matrix[np.ix_(movie_indices, movie_indices)].reshape((-1, 1)) # Train diversity on this
+    diversities = distance_matrix[np.ix_(movie_indices, movie_indices)]
+    #diversities = diversities[np.triu_indices(diversities.shape[0])].reshape((-1, 1)) # Train diversity on this
+    diversities = (diversities.sum(axis=0) / (diversities.shape[0] - 1)).reshape(-1,1)
+    print(f"Diversities = {diversities}, min={diversities.min()}, max={diversities.max()}, avg={diversities.mean()}")
+    
     #relevances = loader.rating_matrix[:, movie_indices].T # Train other CDF on this
     relevances = loader.rating_matrix[:, movie_indices] # Train other CDF on this
-    relevances = relevances[relevances > 0.0]
+    relevances = relevances.mean(axis=0)
+    # relevances = relevances[relevances > 0.0]
     relevances = relevances.reshape((-1, 1))
-    novelties = (loader.rating_matrix.astype(bool).sum(axis=0) / loader.rating_matrix.shape[0]).reshape((-1, 1))
+    novelties = 1.0 - (loader.rating_matrix.astype(bool).sum(axis=0) / loader.rating_matrix.shape[0])
+    novelties = novelties[movie_indices].reshape((-1, 1))
+
 
     for movie_idx in movie_indices:
         # relevances.append(movie["relevance"])
         # diversities.append(movie["diversity"])
         # novelties.append(movie["novelty"])
         if movie_idx in selected_movies:
-            selected_relevances.append(loader.rating_matrix[:, movie_idx].mean()) # TODO try without transposition
-            selected_diversities.append(distance_matrix[movie_idx][movie_indices].mean())
-            selected_novelties.append(loader.rating_matrix[:, movie_idx].astype(bool).sum() / loader.rating_matrix.shape[0])
+            r = loader.rating_matrix[:, movie_idx]
+            #r = r[r > 0.0]
+            r = r.mean(axis=0)
+            #r = r.mean()
+            selected_relevances.append(r) # TODO try without transposition
+            # selected_diversities.append(distance_matrix[movie_idx][movie_indices].mean())
+            d = distance_matrix[movie_idx][movie_indices].sum() / (len(movie_indices) - 1)
+            selected_diversities.append(d[d > 0].reshape(-1, 1))
+            selected_novelties.append(1.0 - (loader.rating_matrix[:, movie_idx].astype(bool).sum() / loader.rating_matrix.shape[0]))
             #selected_relevances.append(movie["relevance"])
             #selected_diversities.append(movie["diversity"])
             #selected_novelties.append(movie["novelty"])
@@ -495,15 +520,20 @@ def calculate_weight_estimate(selected_movies, elicitation_movies):
     # Take relevance values of all items and train CDF on it
     # Calculate CDF for relevances of all selected items and take their average
     rel_cdf = QuantileTransformer()
+    #print(f"Fitting relevance cdf on relevances: {relevances.shape}, min={relevances.min()}, max={relevances.max()}, avg={relevances.mean()}, perc50={np.percentile(relevances, 50)}")
     rel_cdf.fit(relevances)
-    rel = np.mean(rel_cdf.transform(np.stack(selected_relevances).reshape(-1, 1)))
-    print(f"Selected relevances = {selected_relevances}")
-    print(f"Rel={rel}")
+    x = np.stack(selected_relevances).reshape(-1, 1)
+    #print(f"Transforming relevances={x.shape}, min={x.min()}, max={x.max()}, avg={x.mean()}, perc50={np.percentile(x, 50)}")
+    rel = np.mean(rel_cdf.transform(x))
+    #print(f"Selected relevances = {selected_relevances}")
+    
+    #print(f"Rel={rel}")
 
     # Take diversity values of all items shown during elicitation and train CDF on it
     # Calculate CDF for diversities of all selected items and take their average
     div_cdf = QuantileTransformer()
     div_cdf.fit(diversities)
+    print(f"Selected diversities = {np.stack(selected_diversities).reshape(-1, 1)}, min={np.stack(selected_diversities).reshape(-1, 1).min()}, mean={np.stack(selected_diversities).reshape(-1, 1).mean()}")
     div = np.mean(div_cdf.transform(np.stack(selected_diversities).reshape(-1, 1)))
 
     # Take novelty values of all items and train CDF on it
@@ -512,15 +542,123 @@ def calculate_weight_estimate(selected_movies, elicitation_movies):
     nov_cdf.fit(novelties)
     nov = np.mean(nov_cdf.transform(np.stack(selected_novelties).reshape(-1, 1)))
 
-    return [rel, div, nov]
+    result = np.array([rel, div, nov])
+    return result / result.sum()
 
-def rlprop():
+
+@functools.cache
+def prepare_wrapper_once():
     loader = load_ml_dataset()
 
 
+    items = np.arange(loader.rating_matrix.shape[1])
+    distance_matrix = 1.0 - loader.similarity_matrix
+    print(f"Rating matrix min={loader.rating_matrix.min()}, max={loader.rating_matrix.max()}, avg={loader.rating_matrix.mean()}")
+    
+    users_viewed_item = loader.rating_matrix.astype(bool).sum(axis=0)
+    print(f"Total entries = {users_viewed_item.sum()} should equal dataframe size: {loader.ratings_df.shape}")
+    # extended_rating_matrix = loader.rating_matrix.copy() # TODO prepare extended rating matrix
+    
+    #ratings_df = loader.ratings_df.rename(columns={"movieId": "item", "userId": "user"})
+
+    #algo = als.ImplicitMF(100, iterations=50)
+    #algo = Recommender.adapt(algo)
+    #algo.fit(ratings_df)
+    
+    # start_time = time.perf_counter()
+    # item_ids = ratings_df.item.unique()
+    # for user_id in ratings_df.user.unique():
+    #     user_idx = loader.user_to_user_index[user_id]
+    #     res = algo.predict_for_user(user_id, item_ids)
+    #     res = ((res - res.min()) / (res.max() - res.min())) * 5.0
+    #     for item_id, rating in res.iteritems():
+    #         item_idx = loader.movie_id_to_index[item_id]
+    #         if extended_rating_matrix[user_idx, item_idx] == 0.0:
+    #             extended_rating_matrix[user_idx, item_idx] = rating
+    # print(f"Took: {time.perf_counter() - start_time}")
+
+    return loader, items, distance_matrix, users_viewed_item#, algo, ratings_df
+
+def enrich_results(top_k, loader):
+    top_k_description = [loader.movie_index_to_description[movie_idx] for movie_idx in top_k]
+    top_k_url = [loader.get_image(movie_idx) for movie_idx in top_k]
+    return [{"movie": movie, "url": url, "movie_idx": str(movie_idx)} for movie, url, movie_idx in zip(top_k_description, top_k_url, top_k)]
+
+def prepare_wrapper(selected_movies, model, mandate_allocation_factory, obj_weights, filter_out_movies = []):
+    loader, items, distance_matrix, users_viewed_item = prepare_wrapper_once()
+
+    max_user = loader.ratings_df.userId.max()
+    model, train = prepare_tf_model(loader)
+    new_user = tf.constant(str(max_user + 1))
+    def data_gen():
+        for x in selected_movies:
+            yield {
+                "movie_title": tf.constant(loader.movies_df.loc[x].title),
+                "user_id": new_user,
+            }
+    ratings2 = tf.data.Dataset.from_generator(data_gen, output_signature={
+        "movie_title": tf.TensorSpec(shape=(), dtype=tf.string),
+        "user_id": tf.TensorSpec(shape=(), dtype=tf.string)
+    })
+    scores, x = model.predict_all_unseen(new_user, ratings2, n_items=items.size) #model.predict_for_user(new_user, ratings2, k=2000)
+    scores, x = tf.squeeze(scores).numpy(), tf.squeeze(x).numpy()
+    #print(f"### Recommendations = {x[:10]}")
+    #print(f"### Scores shape={scores[:10]}")
+    #print(f"Min score={scores.min()}, max={scores.max()}, mean={scores.mean()}")
+    scores = (scores - scores.min()) / (scores.max() - scores.min())
+    top_k = [loader.movie_id_to_index[loader.movies_df[loader.movies_df.title == x.decode("UTF-8")].movieId.values[0]] for x in x]
+    
+    rating_vector = np.zeros((items.size, ), dtype=np.float32)
+    rating_vector[top_k] = scores # Set the predicted scores
+    rating_vector[selected_movies] = 1.0 # Set selected movies to 1.0
+    rating_vector = np.expand_dims(rating_vector, axis=0) # Convert it to 1xN rating matrix
+    print(f"Min rating vector={rating_vector.min()}, max rating vector = {rating_vector.max()}, avg={rating_vector.mean()}")
+    #print(f"Rating_vector = {rating_vector}")
+    extended_rating_matrix = rating_vector #loader.rating_matrix[:1] #rating_vector
+    #print(f"### Extended rating matrix shape = {extended_rating_matrix.shape}, rating_vector shape={rating_vector.shape}")
+    
+    normalization_factory = standardization
+    cache_dir = "."
+
+    mandate_allocation = mandate_allocation_factory(obj_weights, -1e6)
+    
+    unseen_items_mask = np.ones(extended_rating_matrix.shape, dtype=np.bool8)
+    #unseen_items_mask[loader.rating_matrix > 0.0] = 0 # Mask out already seem items
+    if filter_out_movies:
+        unseen_items_mask[:, np.array(filter_out_movies)] = 0 # Mask out the items
+
+    # Reduce for single user
+    # extended_rating_matrix = extended_rating_matrix[:1]
+    # unseen_items_mask = unseen_items_mask[:1]
 
 
-def recommend_2_3(selected_movies, filter_out_movies = []):
+    discount_sequences = [[1.0] * 10, [1.0] * 10, [1.0] * 10]
+
+    return loader, RLPropWrapper(items, extended_rating_matrix, distance_matrix, users_viewed_item, normalization_factory, mandate_allocation, unseen_items_mask, cache_dir, discount_sequences)
+
+def rlprop(selected_movies, model, weights, filter_out_movies = []):
+    obj_weights = weights
+    obj_weights /= obj_weights.sum()
+    
+
+    loader, wrapper = prepare_wrapper(selected_movies, model, exactly_proportional_fuzzy_dhondt_2, obj_weights, filter_out_movies)
+    wrapper.init()
+    x = wrapper(10)
+
+    return enrich_results(x[0], loader)
+
+def weighted_average(selected_movies, model, weights, filter_out_movies = []):
+    obj_weights = weights
+    obj_weights /= obj_weights.sum()
+    
+    loader, wrapper = prepare_wrapper(selected_movies, model, weighted_average_strategy, obj_weights, filter_out_movies)
+    wrapper.init()
+    x = wrapper(10)
+
+    return enrich_results(x[0], loader)
+
+
+def recommend_2_3(selected_movies, filter_out_movies = [], return_model = False):
     loader = load_ml_dataset()
 
     # algo_als = als.BiasedMF(10, iterations=5)
@@ -588,22 +726,10 @@ def recommend_2_3(selected_movies, filter_out_movies = []):
     # top_k = top_k.numpy()
     # print(f"Top k = {top_k}")
     
-    top_k_description = [loader.movie_index_to_description[movie_idx] for movie_idx in top_k]
-    top_k_url = [loader.get_image(movie_idx) for movie_idx in top_k]
-    print(f"Translated description: {top_k_description}")
-    # # for title, score in sorted(predicted_scores.items(), key=lambda x: x[1], reverse=True)[:10]:
-    # #     print(f"{title}: {score}")
-    # print(f"Top k description: {top_k_description}")
-    # top_k_validation = []
-    # top_k_validation_2 = []
-    # for i in range(10):
-    #     top_k_validation.append(loader.movies_df.loc[top_k[i]].title)
-    #     top_k_validation_2.append(loader.movies_df.iloc[top_k[i]].title)
-    # print(f"Top k titles validation: {top_k_validation}")
-    # print(f"Top k titles validation 2: {top_k_validation}")
-    # print(f"Top k titles validation 3: {[model.unique_movie_titles[idx] for idx in top_k]}")
-    return [{"movie": movie, "url": url, "movie_idx": str(movie_idx)} for movie, url, movie_idx in zip(top_k_description, top_k_url, top_k)]
+    if return_model:
+        return enrich_results(top_k, loader), model
 
+    return enrich_results(top_k, loader)
 
     
     ratings_df = loader.ratings_df
@@ -778,12 +904,10 @@ def search_for_movie(attrib, pattern):
 
     return result
 
+
 if __name__ == "__main__":
     loader = load_ml_dataset()
-    from rlprop_wrapper import RLPropWrapper
-    from normalization.identity import identity
-    from mandate_allocation.exactly_proportional_fuzzy_dhondt_2 import exactly_proportional_fuzzy_dhondt_2
-    import pandas as pd
+
 
     items = np.arange(loader.rating_matrix.shape[1])
     distance_matrix = 1.0 - loader.similarity_matrix
@@ -829,6 +953,10 @@ if __name__ == "__main__":
     wrapper.init()
     x = wrapper(10)
     print(x)
+
+
+
+
     # x = MultiObjectiveSamplingFromBucketsElicitation(loader.rating_matrix, loader.similarity_matrix, {"relevance": 3, "diversity": 2, "novelty": 1}, {"relevance": [4, 4, 4], "diversity": [6, 4], "novelty": [5]})
     # res = x.get_initial_data()
     # print(f"Got initial data = {res}")
