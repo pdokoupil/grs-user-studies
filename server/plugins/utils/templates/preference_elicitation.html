@@ -69,12 +69,12 @@
       </b-col>
     </b-row> -->
     <b-row align-h="center">
-      <b-col sm="1" align-h="start">
+      <b-col cols="2" align-h="start">
         <div>
           <b-btn :disabled="itemsBackup" v-on:click="onClickLoadMore" variant="secondary">Load more movies</b-btn>
         </div>
       </b-col>
-      <b-col sm="3" align-h="center">
+      <b-col cols="3" align-h="center">
         <b-btn block v-on:Click="onElicitationFinish(theForm)" :disabled="disableNextStep" variant="primary">Finish preference elicitation and continue</b-btn>
       </b-col>
     </b-row>

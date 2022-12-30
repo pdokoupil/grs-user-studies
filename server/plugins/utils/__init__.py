@@ -32,7 +32,7 @@ __author_contact__ = "Patrik.Dokoupil@matfyz.cuni.cz"
 
 bp = Blueprint(__plugin_name__, __plugin_name__, url_prefix=f"/{__plugin_name__}")
 
-from .preference_elicitation import load_data_1, load_data_2, load_data_3, recommend_1, recommend_2_3, search_for_movie, rlprop, weighted_average, calculate_weight_estimate
+from .preference_elicitation import load_data_1, load_data_2, load_data_3, recommend_1, recommend_2_3, search_for_movie, rlprop, weighted_average, calculate_weight_estimate, result_layout_variants
 
 
 NUM_TO_SELECT = 5
@@ -184,7 +184,6 @@ def on_input():
     db.session.commit()
     return "OK"
 
-
 # Receives arbitrary feedback (typically from preference elicitation) and generates recommendation
 @bp.route("/send-feedback", methods=["GET"])
 def send_feedback():
@@ -253,6 +252,8 @@ def send_feedback():
     flask.session["elicitation_selected_movies"] = selected_movies
     print("### zeroing")
     flask.session["selected_movie_indices"] = [] #dict() # For each iteration, we can store selected movies
+
+    flask.session["permutation"] = np.random.permutation(len(result_layout_variants)).tolist()
 
     return redirect(url_for("plugin1.compare_algorithms"))
     #return redirect(url_for("plugin1.compare_algorithms", movies=recommended_items))

@@ -88,11 +88,11 @@
                                 <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
                             </div>
                         </div>
-                        <b-row align-h="center">
-                            <b-col sm="4">
+                        <b-row align-h="center" align-v="center">
+                            <b-col cols="4">
                                 <label for="rating-lg" class="mt-3">Satisfaction with the algorithm's output</label>
                             </b-col>
-                            <b-col>
+                            <b-col cols="4">
                                 <b-form-rating
                                     class="mt-3" :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))"
                                     v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))"

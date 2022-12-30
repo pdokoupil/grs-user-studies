@@ -72,6 +72,14 @@ print(f"Dirname: {os.path.dirname(__file__)}")
 
 groups = None
 
+result_layout_variants = [
+    "columns",
+    "column-single",
+    "rows",
+    "row-single",
+    "row-single-scrollable"
+]
+
 # Loads the movielens dataset
 @functools.cache
 def load_ml_dataset(ml_variant="ml-latest"):

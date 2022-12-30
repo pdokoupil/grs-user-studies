@@ -6,7 +6,7 @@ import os
 import time
 from flask import Blueprint, jsonify, request, redirect, url_for, make_response, render_template, session
 
-from plugins.utils.preference_elicitation import recommend_2_3, rlprop, weighted_average
+from plugins.utils.preference_elicitation import recommend_2_3, rlprop, weighted_average, result_layout_variants
 
 from models import Interaction, Participation
 from app import db, pm
@@ -102,9 +102,10 @@ def compare_algorithms():
 
     
 
-    result_layout = request.args.get("result_layout")
-    result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
-
+    #result_layout = request.args.get("result_layout")
+    #result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
+    result_layout = result_layout_variants[session["permutation"][0]]
+    
     # Decide on next refinement layout
     refinement_layout = "3" # Use version 3
     session["refinement_layout"] = refinement_layout
@@ -142,7 +143,63 @@ def algorithm_feedback():
     session["selected_movie_indices"] = x
     print(f"Retrieved selected movies for iteration={session['iteration']} are: {session['selected_movie_indices']}")
     print(session["selected_movie_indices"])
-    return redirect(url_for("plugin1.refinement_feedback"))
+    
+    # return redirect(url_for("plugin1.refinement_feedback")) # TODO uncomment for main user study
+    ##### START OF NEW, SHORTER VERSION
+    # Since we never get to refine-results, we have to move some of the stuff here
+    # E.g. we should call iteration ended here, weights are kept the same
+    iteration_ended(session["iteration"] - 1, session["selected_movie_indices"], session["weights"])    
+    # And generate new recommendations
+    prepare_recommendations()
+    # And shift the permutation
+    permutation = session["permutation"]
+    permutation = permutation[1:] + permutation[:1] # Move first item to the end
+    session["permutation"] = permutation
+    return redirect(url_for("plugin1.compare_algorithms"))
+    ##### END OF NEW, SHORTER VERSION
+
+def prepare_recommendations():
+    mov = session["movies"]
+
+    # Randomly chose two algorithms
+    algorithms = ["relevance_based", "rlprop", "weighted_average"]
+    assert len(mov[algorithms[0]]) == len(mov[algorithms[1]]) == len(mov[algorithms[2]]), "All algorithms should share the number of iterations"
+    
+    for algorithm in algorithms:
+        mov[algorithm].append([])
+
+    # We always take relevance_based algorithm and add one randomly chosen algorithm to it
+    rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
+    random.shuffle(rnd_algorithms)
+    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
+    print(f"Chosen algorithms = {algorithms}")
+
+    mov_indices = []
+    for i in range(len(mov[algorithms[0]])):
+        indices = set()
+        for algo in algorithms:
+            indices.update([int(y["movie_idx"]) for y in mov[algo][i]])
+        mov_indices.append(list(indices))
+
+    
+    filter_out_movies = session["elicitation_selected_movies"] + sum(mov_indices[:HIDE_LAST_K], [])
+
+    # Always generate recommendation via relevance based algorithm because we need to get the model (we use it as a baseline)
+    recommended_items, model = recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies, return_model=True)    
+
+    # Order of insertion should be preserved
+    for algorithm in algorithms:
+        if algorithm == "relevance_based":
+            pass
+        elif algorithm == "rlprop":
+            recommended_items = rlprop(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], model, np.array(session['weights']), filter_out_movies)
+        elif algorithm == "weighted_average":
+            recommended_items = weighted_average(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], model, np.array(session['weights']), filter_out_movies)
+        else:
+            assert False
+        mov[algorithm][-1] = recommended_items
+
+    session["movies"] = mov
 
 # We receive feedback from refinement_feedback.html
 @bp.route("/refine-results")
