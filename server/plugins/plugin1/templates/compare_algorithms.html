@@ -21,7 +21,7 @@
             {% if result_layout == "columns" or result_layout == "column-single" %}
             <b-col v-for="variantResults in variantsResults" :class="variantsResults.indexOf(variantResults) == variantsResults.length - 1 ? 'verticalSeparator' : ''">
                 <b-row align-h="center">
-                    <h2>Algorithm [[ variantsResults.indexOf(variantResults) + 1 ]]</h2>
+                    <h2>Algorithm [[ variantNames[variantsResults.indexOf(variantResults)] ]]</h2>
                 </b-row>
                 <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
                     <b-col sm="auto" class="align-middle" v-for="col in row">
@@ -39,7 +39,7 @@
             <b-col align-h="center">
                 <b-row align-h="center" v-for="variantResults in variantsResults">
                     <b-col class="text-center" align-h="center">
-                        <h2>Algorithm [[ variantsResults.indexOf(variantResults) + 1 ]]</h2>
+                        <h2>Algorithm [[ variantNames[variantsResults.indexOf(variantResults)] ]]</h2>
                         <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
                             <b-col sm="auto" class="align-middle" v-for="col in row">
                                 <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
@@ -82,7 +82,7 @@
                 <b-row align-h="center" v-for="variantResults in variantsResults">
                     <div  style="max-width: 100%;">
                     <!-- <b-col class="text-center align-middle" align-h="center"> -->
-                        <h2>Algorithm [[ variantsResults.indexOf(variantResults) + 1 ]]</h2>
+                        <h2>Algorithm [[ variantNames[variantsResults.indexOf(variantResults)] ]]</h2>
                         <div style="overflow-x: auto; scroll-snap-type: x mandatory; display: flex; flex-wrap: nowrap; align-items: center; width: 100%; text-align: left;" v-for="row in variantResults">
                             <div style="scroll-snap-align: center; margin-right: 1px; flex: 0 0 auto;" sm="auto" class="mr-3" v-for="col in row">
                                 <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />

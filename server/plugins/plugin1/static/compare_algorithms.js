@@ -10,8 +10,10 @@ window.app = new Vue({
         const colsPerRow = itemsPerRow;
 
         var numAlgorithms = 0;
+        var variantNames = [];
 
         for (variantIdx in movies) {
+            variantNames.push(variantIdx.toUpperCase());
             let variantResults = movies[variantIdx];
             let variantResultsColumnified = [];
             let row = [];
@@ -41,7 +43,8 @@ window.app = new Vue({
             algorithm2Q1Validated: false,
             dontLikeAnythingValue: false,
             algorithm1Q1Value: 0,
-            algorithm2Q1Value: 0
+            algorithm2Q1Value: 0,
+            variantNames: variantNames
         }
     },
     computed: {

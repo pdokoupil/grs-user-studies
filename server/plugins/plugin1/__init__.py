@@ -41,6 +41,14 @@ def load_languages():
 languages = load_languages()
 print(f"Languages={languages}")
 
+# Map internal algorithm names to those displayed to user
+algorithm_name_mapping = {
+    "rlprop": "beta",
+    "relevance_based": "gamma",
+    "weighted_average": "delta"
+}
+
+
 @bp.before_app_first_request
 def bp_init():
     print(pm.emit_assets("plugin1", "languages/en.json"))
@@ -93,14 +101,20 @@ def compare_algorithms():
     # movies = [session["movies"][-1]]
     # movies.append([movies[0][0]] * len(movies[0]))
     algorithm_assignment = {}
-    movies = []
-    for i, algorithm in enumerate(session["movies"].keys()):
+    algorithms = list(algorithm_name_mapping.keys())
+    # Make them in random order so that they are displayed differently
+    random.shuffle(algorithms)
+    movies = {}
+    for i, algorithm in enumerate(algorithms):
         if session["movies"][algorithm][-1]:
             # Only non-empty makes it to the results
-            movies.append(session["movies"][algorithm][-1])
-            algorithm_assignment[str(i)] = algorithm
+            movies[algorithm_name_mapping[algorithm]] = session["movies"][algorithm][-1]
+            algorithm_assignment[str(i)] = {
+                "algorithm": algorithm,
+                "name": algorithm_name_mapping[algorithm]
+            }
 
-    
+
 
     #result_layout = request.args.get("result_layout")
     #result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
