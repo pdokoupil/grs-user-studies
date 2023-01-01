@@ -41,8 +41,8 @@
     <!-- Our application root element -->
     <div id="app">
       <b-container fluid>
-        <b-jumbotron header="Participant details">
-          <p>Please enter your details.</p>
+        <b-jumbotron header="{{participant_details}}">
+          <p>{{please_enter_details}}</p>
         </b-jumbotron>
         <b-row align-h="center">
           <b-col align-h="center" sm="5">
@@ -57,16 +57,16 @@
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="email-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="email-help" triggers="hover">Your e-mail address (optional)</b-tooltip>
+                      <b-tooltip target="email-help" triggers="hover">{{enter_email_hint}}</b-tooltip>
                     </b-col>
                     <b-col>
-                      <b-form-input name="email" type="email" placeholder="Please enter your email" v-model="userEmail"/>
+                      <b-form-input name="email" type="email" placeholder="{{enter_email}}" v-model="userEmail"/>
                     </b-col>
                   </b-row>
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="gender-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="gender-help" triggers="hover">Your gender (mandatory)</b-tooltip>
+                      <b-tooltip target="gender-help" triggers="hover">{{enter_gender_hint}}</b-tooltip>
                     </b-col>
                     <b-col>
                       <b-form-select v-model="gender" :options="genders" name="gender" :state="gender != null" required="True" type=""></b-form-select>
@@ -75,7 +75,7 @@
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="ageGroup-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="ageGroup-help" triggers="hover">Your age group (mandatory)</b-tooltip>
+                      <b-tooltip target="ageGroup-help" triggers="hover">{{enter_age_hint}}</b-tooltip>
                     </b-col>
                     <b-col>
                       <b-form-select v-model="ageGroup" :options="ageGroups" name="ageGroup" :state="ageGroup!= null" required="True" type=""></b-form-select>
@@ -84,7 +84,7 @@
                   <b-row class="mb-3">
                     <b-col class="mr-3 mt-2" sm="1">
                       <b-icon id="education-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="education-help" triggers="hover">Your highest achieved education level (mandatory)</b-tooltip>
+                      <b-tooltip target="education-help" triggers="hover">{{enter_education_hint}}</b-tooltip>
                     </b-col>
                     <b-col>
                       <b-form-select v-model="education" :options="educations" name="education" :state="education != null" required="True" type=""></b-form-select>
@@ -93,7 +93,7 @@
                   <b-row align-v="center" class="mb-3">
                     <b-col align-v="center" class="mr-3 mt-2" sm="1">
                       <b-icon id="mlFamiliar-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="mlFamiliar-help" triggers="hover">Your experience with machine learning (mandatory)</b-tooltip>
+                      <b-tooltip target="mlFamiliar-help" triggers="hover">{{enter_ml_familiar}}</b-tooltip>
                       
                     </b-col>
                     <b-col align-h="end">
@@ -101,50 +101,48 @@
                     </b-col>
                   </b-row>
                   <b-row class="mt-5" align-h="center">
-                    <h4>Informed consent</h4>
+                    <h4>{{informed_consent_header}}</h4>
                   </b-row>
                   <b-row align-h="start">
                     <p>
-                      Before continuing with the research, you should be familiarize yourself and agree with the following statements:
+                      {{informed_consent_p1}}
                     </p>
                     <ul>
                       <li>
                         <p>
-                          I familiarize myself with the aim and targets of the research project (see Help at the top right) and I do not mind to contribute on it (i.e., the research topic does not go against my beliefs etc.). I agree that authors of the project may utilize my (anonymous) responses and my demographic data while presenting research outcomes - e.g. in scientific papers. I do not require any monetary compensation for my participation in the research. (Nonetheless, we will really appreciate your help! Plus, there is a good feeling for helping the science:-))
+                          {{informed_consent_p2}}
                         </p>
                       </li>
                       <li>
                         <p>
-                          We will never publish data that could breach your identity (we do not have such data anyway:-). We also neither share your e-mail address to third parties nor disclose it publicly (if you opt to provide it). In the prospective paper, we would like to publish an anonymized dataset of responses. The dataset should contain following information
-    
-                          randomly generated ID of the participant (i.e. UID = 468201)
-    
-                          demographic data of the participant ( age group, education, machine learning familiarity)
-    
-                          participant's responses to individual tasks
-    
+                          {{informed_consent_p3}}
+                          <ul>
+                            <li>{{informed_consent_p31}}</li>
+                            <li>{{informed_consent_p32}}</li>
+                            <li>{{informed_consent_p33}}</li>
+                          </ul>
                         </p>
                       </li>
                       <li>
                         <p>
-                          In the dataset, there will be no mapping between the ID of the user and his/her true identity (we do not have such data anyway)
+                          {{informed_consent_p4}}
                         </p>
                       </li>
                       <li>
                         <p>
-                          You can stop your participation at any time (just close the browser window:-). You can always revert your consent to use your responses - just write to us with your details (submitted e-mail, time when you started participation etc.) If you did submit your e-mail, but do not want to receive any new messages from us, just write it to us...
+                          {{informed_consent_p5}}
                         </p>
                       </li>
                       <li>
                         <p>
-                          PS: any disputes (hopefully, non should arise:-) will be governed by the law and jurisdiction of Czech republic
+                          {{informed_consent_p6}}
                         </p>
                       </li>
                     </ul>
                     
                   </b-row>
                   <b-row  class="mb-3" align-h="end">
-                    <b-button variant="primary" type="submit">Start user study</b-button>
+                    <b-button variant="primary" type="submit">{{start_user_study}}</b-button>
                     <!-- <b-btn variant="primary" v-on:click="handleStartUserStudyClick">Start user study</b-btn> -->
                   </b-row>
               </b-form-group>
@@ -170,7 +168,7 @@
             education: null,
             mlFamiliar: null,
             ageGroups: [
-              { value: null, text: 'Please select your age group' },
+              { value: null, text: '{{enter_age}}' },
               { value: 0, text: '0-15' },
               { value: 16, text: '16-20' },
               { value: 21, text: '21-30' },
@@ -180,24 +178,24 @@
               { value: 65, text: '65+' }
             ],
             genders: [
-              { value: null, text: 'Please select your gender' },
-              { value: 0, text: 'Male' },
-              { value: 1, text: 'Female' },
-              { value: 2, text: 'Other' }
+              { value: null, text: '{{enter_gender}}' },
+              { value: 0, text: '{{gender_male}}' },
+              { value: 1, text: '{{gender_female}}' },
+              { value: 2, text: '{{gender_other}}' }
             ],
             educations: [
-              { value: null, text: 'Please select your achieved education' },
-              { value: 0, text: 'No formal education' },
-              { value: 1, text: 'Primary school' },
-              { value: 2, text: 'High school' },
-              { value: 3, text: 'Bachelor\'s degree' },
-              { value: 4, text: 'Master\'s degree' },
-              { value: 5, text: 'Doctoral degree'}
+              { value: null, text: '{{enter_education}}' },
+              { value: 0, text: '{{education_no_formal}}' },
+              { value: 1, text: '{{education_primary}}' },
+              { value: 2, text: '{{education_high}}' },
+              { value: 3, text: '{{education_bachelor}}' },
+              { value: 4, text: '{{education_master}}' },
+              { value: 5, text: '{{education_doctoral}}'}
             ],
             mlFamiliarOptions: [
-              { value: null, text: 'Are you familiar with machine learning?' },
-              { value: 0, text: 'No' },
-              { value: 1, text: 'Yes' }
+              { value: null, text: '{{enter_ml_familiar}}' },
+              { value: 0, text: '{{no}}' },
+              { value: 1, text: '{{yes}}' }
             ],
             showAlert: false,
             alertText: ""

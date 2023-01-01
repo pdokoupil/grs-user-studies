@@ -10,7 +10,7 @@ from plugins.utils.preference_elicitation import recommend_2_3, rlprop, weighted
 
 from models import Interaction, Participation
 from app import db, pm
-from common import multi_lang
+from common import load_languages, multi_lang
 import glob
 
 import numpy as np
@@ -30,15 +30,7 @@ TOTAL_ITERATIONS = 8
 
 HIDE_LAST_K = 1000000 # Effectively hides everything
 
-def load_languages():
-    print("PARSING LANGUAGES #########")
-    res = {}
-    for x in glob.glob(os.path.join(os.path.dirname(__file__), "static/languages/*.json")):
-        with open(x, "r", encoding="utf8") as f:
-            res[os.path.splitext(os.path.basename(x))[0]] = json.loads(f.read())
-    return res
-
-languages = load_languages()
+languages = load_languages(os.path.dirname(__file__))
 print(f"Languages={languages}")
 
 # Map internal algorithm names to those displayed to user
@@ -47,6 +39,13 @@ algorithm_name_mapping = {
     "relevance_based": "gamma",
     "weighted_average": "delta"
 }
+
+# Implementation of this function can differ among plugins
+def get_lang():
+    default_lang = "en"
+    if "lang" in session and session["lang"] and session["lang"] in languages:
+        return session["lang"]
+    return default_lang
 
 
 @bp.before_app_first_request
@@ -81,6 +80,7 @@ def limit():
     return render_template("plugin1.html", **template_vars)
     #return jsonify(dict(status=0, message="Access Denial"))
 
+# Public facing endpoint
 @bp.route("/join", methods=["GET"])
 @multi_lang
 def join():
@@ -185,7 +185,7 @@ def prepare_recommendations():
     # We always take relevance_based algorithm and add one randomly chosen algorithm to it
     rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
     random.shuffle(rnd_algorithms)
-    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
+    algorithms = ["rlprop", "weighted_average"] #algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
     print(f"Chosen algorithms = {algorithms}")
 
     mov_indices = []
@@ -342,6 +342,7 @@ def step2():
     return render_template("step.html", step_number=2)
 
 @bp.route("/preference-elicitation", methods=["GET", "POST"])
+@multi_lang
 def preference_elicitation():
     # Redirect preference elicitation to common implementation from utils
     json_data = request.get_json()

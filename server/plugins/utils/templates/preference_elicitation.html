@@ -1,9 +1,12 @@
 {% include 'header.html' %}
 <div id="app">
 <b-container fluid>
-    <b-jumbotron v-if="{{impl}}==2" :header="jumboHeader" lead="Random sampling based on popularity"></b-jumbotron>
+    <!-- <b-jumbotron v-if="{{impl}}==2" :header="jumboHeader" lead="Random sampling based on popularity"></b-jumbotron>
     <b-jumbotron v-else-if="{{impl}}==3" :header="jumboHeader" lead="Random sampling based on popularity buckets"></b-jumbotron>
-    <b-jumbotron v-else-if="{{impl}}==1" :header="jumboHeader" lead="Random sampling based on relevance, diversity and novelty buckets"></b-jumbotron>
+    <b-jumbotron v-else-if="{{impl}}==1" :header="jumboHeader" lead="Random sampling based on relevance, diversity and novelty buckets"></b-jumbotron> -->
+    <b-jumbotron header="{{header}}">
+      {{hint}}
+    </b-jumbotron>
     <i class="{{impl}}" id="impl"></i>
     <!-- <b-form method="POST" action="{{continuation_url}}"> -->
     <b-form name="theForm" method="GET" action="/utils/send-feedback">
@@ -38,16 +41,16 @@
       <b-col></b-col>
       <b-col align-h="center">
         <b-row>
-          <b-col><b-input @update="onUpdateSearchMovieName" @keydown="onKeyDownSearchMovieName" v-model="searchMovieName" type="search" placeholder="Enter movie name"></b-input></b-col>
+          <b-col><b-input @update="onUpdateSearchMovieName" @keydown="onKeyDownSearchMovieName" v-model="searchMovieName" type="search" placeholder="{{enter_name}}"></b-input></b-col>
         </b-row>
       </b-col>
       <b-col align-h="start">
         <b-row>
           <div class="mr-1">
-            <b-btn v-on:click="onClickSearch" variant="secondary">Search</b-btn>
+            <b-btn v-on:click="onClickSearch" variant="secondary">{{search}}</b-btn>
           </div>
           <div class="mr-5">
-            <b-btn :disabled="!itemsBackup" v-on:click="onClickCancelSearch" variant="warning">Cancel search</b-btn>
+            <b-btn :disabled="!itemsBackup" v-on:click="onClickCancelSearch" variant="warning">{{cancel_search}}</b-btn>
           </div>
         </b-row>
       </b-col>
@@ -71,11 +74,11 @@
     <b-row align-h="center">
       <b-col cols="2" align-h="start">
         <div>
-          <b-btn :disabled="itemsBackup" v-on:click="onClickLoadMore" variant="secondary">Load more movies</b-btn>
+          <b-btn :disabled="itemsBackup" v-on:click="onClickLoadMore" variant="secondary">{{load_more}}</b-btn>
         </div>
       </b-col>
       <b-col cols="3" align-h="center">
-        <b-btn block v-on:Click="onElicitationFinish(theForm)" :disabled="disableNextStep" variant="primary">Finish preference elicitation and continue</b-btn>
+        <b-btn block v-on:Click="onElicitationFinish(theForm)" :disabled="disableNextStep" variant="primary">{{finish}}</b-btn>
       </b-col>
     </b-row>
     <b-row>
