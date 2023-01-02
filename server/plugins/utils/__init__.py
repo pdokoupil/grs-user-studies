@@ -288,18 +288,12 @@ def send_feedback():
     # #return recommended_items
     # print(f"Recommended items: {recommended_items}")
 
-    algorithms = ["relevance_based", "rlprop", "weighted_average"]
+    algorithms = ["relevance_based", "weighted_average"]
     # Add default entries so that even the non-chosen algorithm has an empty entry
     # to unify later access
     recommendations = {
         algo: [[]] for algo in algorithms
     }
-    
-    # We always take relevance_based algorithm and add one randomly chosen algorithm to it
-    rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
-    random.shuffle(rnd_algorithms)
-    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
-    print(f"Chosen algorithms = {algorithms}")
     
     # We filter out everything the user has selected during preference elicitation.
     # However, we allow future recommendation of SHOWN, NOT SELECTED (during elicitation, not comparison) altough these are quite rare

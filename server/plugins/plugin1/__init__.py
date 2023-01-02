@@ -206,17 +206,11 @@ def prepare_recommendations():
     mov = session["movies"]
 
     # Randomly chose two algorithms
-    algorithms = ["relevance_based", "rlprop", "weighted_average"]
-    assert len(mov[algorithms[0]]) == len(mov[algorithms[1]]) == len(mov[algorithms[2]]), "All algorithms should share the number of iterations"
+    algorithms = ["relevance_based", "weighted_average"]
+    assert len(mov[algorithms[0]]) == len(mov[algorithms[1]]), "All algorithms should share the number of iterations"
     
     for algorithm in algorithms:
         mov[algorithm].append([])
-
-    # We always take relevance_based algorithm and add one randomly chosen algorithm to it
-    rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
-    random.shuffle(rnd_algorithms)
-    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
-    print(f"Chosen algorithms = {algorithms}")
 
     mov_indices = []
     for i in range(len(mov[algorithms[0]])):
@@ -263,17 +257,11 @@ def refine_results():
     mov = session["movies"]
     
     # Randomly chose two algorithms
-    algorithms = ["relevance_based", "rlprop", "weighted_average"]
-    assert len(mov[algorithms[0]]) == len(mov[algorithms[1]]) == len(mov[algorithms[2]]), "All algorithms should share the number of iterations"
+    algorithms = ["relevance_based", "weighted_average"]
+    assert len(mov[algorithms[0]]) == len(mov[algorithms[1]]), "All algorithms should share the number of iterations"
     
     for algorithm in algorithms:
         mov[algorithm].append([])
-
-    # We always take relevance_based algorithm and add one randomly chosen algorithm to it
-    rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
-    random.shuffle(rnd_algorithms)
-    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
-    print(f"Chosen algorithms = {algorithms}")
 
     mov_indices = []
     for i in range(len(mov[algorithms[0]])):
