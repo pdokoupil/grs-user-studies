@@ -46,6 +46,6 @@
     "elicitation_cancel_search": "Cancel search",
     "elicitation_enter_name": "Enter movie name",
     "elicitation_header": "Preference Elicitation",
-    "elicitation_hint": "Which of the recommended movies would you consider watching tonight? If you do not like any of the recommended movies, there is a button at the bottom of this page that you should check. This step will help us to identify and better understand your preferences.",
+    "elicitation_hint": "Which of the recommended movies would you consider watching tonight? If you do not like any of the recommended movies, there is a button at the bottom that allows you to load more movies. Alternatively, you can use search bar at the top to search for movies that you know and like. This step will help us to identify and better understand your preferences.",
     "elicitation_title": "Preference Elicitation"
 }

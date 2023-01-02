@@ -4,7 +4,7 @@
     "note": "Note",
     "algorithm": "Algorithm",
     "compare_note_text": "if movie is present in multiple columns, it is automatically selected for you once you click on any of its occurrences.",
-    "compare_hint": "Please choose all the items that you like (from all columns) and answer questions below the columns.",
+    "compare_hint": "Which of the recommended movies would you consider watching tonight? If you do not like any of the recommended movies, there is a button at the bottom of this page that you should check. Also answer all the questions below please.",
     "compare_algorithm_satisfaction": "Satisfaction with the algorithm's output",
     "compare_like_nothing": "I do not like any of the shown movies.",
     "compare_significantly": "was significantly better",
