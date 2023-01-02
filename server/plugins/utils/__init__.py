@@ -9,7 +9,7 @@ from itsdangerous import URLSafeTimedSerializer
 import numpy as np
 import requests
 from app import csrf
-from common import gen_url_prefix, load_languages, multi_lang
+from common import gen_url_prefix, get_tr, load_languages, multi_lang
 from flask_wtf.csrf import generate_csrf
 import flask_wtf.csrf
 import flask
@@ -52,13 +52,6 @@ def get_lang():
         return flask.session["lang"]
     return default_lang
 
-
-# Returns translator function for translating phrases to given language
-def get_tr(lang):
-    def tr(phrase):
-        return languages[lang][phrase]
-    return tr
-
 # Shared implementation of "/join" phase of the user study
 # Expected input is continuation_url
 # Expected output is 
@@ -85,7 +78,7 @@ def join():
         #     print(f"Resp={resp}")
     
 
-    tr = get_tr(get_lang())
+    tr = get_tr(languages, get_lang())
     params["title"] = tr("join_title")
     params["participant_details"] = tr("join_participant_details")
     params["please_enter_details"] = tr("join_please_enter_details")
@@ -140,7 +133,7 @@ def preference_elicitation():
         "consuming_plugin": "plugin1"
     }
     
-    tr = get_tr(get_lang())
+    tr = get_tr(languages, get_lang())
     params["contacts"] = tr("footer_contacts")
     params["contact"] = tr("footer_contact")
     params["charles_university"] = tr("footer_charles_university")
@@ -154,6 +147,7 @@ def preference_elicitation():
     params["enter_name"] = tr("elicitation_enter_name")
     params["header"] = tr("elicitation_header")
     params["hint"] = tr("elicitation_hint")
+    params["title"] = tr("elicitation_title")
 
     return render_template("preference_elicitation.html", **params) # TODO remove hardcoded consuming plugin
 
@@ -304,7 +298,7 @@ def send_feedback():
     # We always take relevance_based algorithm and add one randomly chosen algorithm to it
     rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
     random.shuffle(rnd_algorithms)
-    algorithms = ["rlprop", "weighted_average"] #algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
+    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
     print(f"Chosen algorithms = {algorithms}")
     
     # We filter out everything the user has selected during preference elicitation.

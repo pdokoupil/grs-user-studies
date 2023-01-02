@@ -2,21 +2,16 @@
 
 <div id="app">
     <b-container fluid>
-        <b-jumbotron header="Final questionare" lead="">
-            <p>Please adjust/fine-tune the results by moving the sliders below. You can set priority for each of the metrics (improving one will automatically decrease the others)</p>
-            Iteration {{ iteration }}
+        <b-jumbotron header="{{header}}" lead="">
+            {{hint}}
         </b-jumbotron>
         <b-row align-h="center">
-            {% if premature %}
-            <h3>TODO add additional questions (case when the user finished after {{ iteration }} iterations (<strong>prematurely</strong>))</h3>
-            {% else %}
-            <h3>TODO add additional questions (case when the user finished after {{ iteration }} iterations (<strong>completed all of them</strong>))</h3>
-            {% endif %}
+            <h3>TODO add additional questions (case when the user finished after {{ iteration }}) iterations</h3>
         </b-row>
-        <b-row align-h="center">
+        <b-row class="mb-3" align-h="center">
             <b-col sm="3">
                 <b-form method="GET" action="{{ url_for('plugin1.finish_user_study') }}">
-                    <b-btn type="submit" block variant="primary" center>Finish</b-btn>
+                    <b-btn type="submit" block variant="primary" center>{{finish}}</b-btn>
                 </b-form>
             </b-col>
         </b-row>

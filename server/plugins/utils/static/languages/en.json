@@ -46,5 +46,6 @@
     "elicitation_cancel_search": "Cancel search",
     "elicitation_enter_name": "Enter movie name",
     "elicitation_header": "Preference Elicitation",
-    "elicitation_hint": "TODO"
+    "elicitation_hint": "TODO",
+    "elicitation_title": "Preference Elicitation"
 }

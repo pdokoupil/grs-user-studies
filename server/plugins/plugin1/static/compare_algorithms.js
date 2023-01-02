@@ -31,6 +31,7 @@ window.app = new Vue({
             moviesColumnified.push(variantResultsColumnified);
             ++numAlgorithms;
         }
+        
         console.log(moviesColumnified);
         return {
             variantsResults: moviesColumnified,

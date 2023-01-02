@@ -23,6 +23,12 @@ def load_languages(base_path):
             res[os.path.splitext(os.path.basename(x))[0]] = json.loads(f.read())
     return res
 
+# Returns translator function for translating phrases to given language
+def get_tr(languages, lang):
+    def tr(phrase):
+        return languages[lang][phrase]
+    return tr
+
 def multi_lang(func):
     @functools.wraps(func)
     def inner(*args, **kwargs):

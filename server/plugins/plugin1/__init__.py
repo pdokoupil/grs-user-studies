@@ -10,7 +10,7 @@ from plugins.utils.preference_elicitation import recommend_2_3, rlprop, weighted
 
 from models import Interaction, Participation
 from app import db, pm
-from common import load_languages, multi_lang
+from common import get_tr, load_languages, multi_lang
 import glob
 
 import numpy as np
@@ -128,7 +128,35 @@ def compare_algorithms():
     # TODO fix that we have two algorithms, add weights and fix algorithm_assignment (randomly assigning with each iteration)
     iteration_started(session["iteration"], session["weights"], movies, algorithm_assignment, result_layout, refinement_layout)
 
-    return render_template("compare_algorithms.html", movies=movies, iteration=session["iteration"], result_layout=result_layout, MIN_ITERATION_TO_CANCEL=MIN_ITERATION_TO_CANCEL)
+    params = {
+        "movies": movies,
+        "iteration": session["iteration"],
+        "result_layout": result_layout,
+        "MIN_ITERATION_TO_CANCEL": MIN_ITERATION_TO_CANCEL
+    }
+
+    tr = get_tr(languages, get_lang())
+    params["contacts"] = tr("footer_contacts")
+    params["contact"] = tr("footer_contact")
+    params["charles_university"] = tr("footer_charles_university")
+    params["cagliary_university"] = tr("footer_cagliary_university")
+    params["t1"] = tr("footer_t1")
+    params["t2"] = tr("footer_t2")
+    params["title"] = tr("compare_title")
+    params["header"] = tr("compare_header")
+    params["note"] = tr("note")
+    params["algorithm"] = tr("algorithm")
+    params["note_text"] = tr("compare_note_text")
+    params["hint"] = tr("compare_hint")
+    params["algorithm_satisfaction"] = tr("compare_algorithm_satisfaction")
+    params["like_nothing"] = tr("compare_like_nothing")
+    params["significantly"] = tr("compare_significantly")
+    params["slightly"] = tr("compare_slightly")
+    params["same"] = tr("compare_same")
+    params["next"] = tr("next")
+    params["finish"] = tr("compare_finish")
+
+    return render_template("compare_algorithms.html", **params)
 
 @bp.route("/refinement-feedback", methods=["GET"])
 def refinement_feedback():
@@ -163,6 +191,8 @@ def algorithm_feedback():
     # Since we never get to refine-results, we have to move some of the stuff here
     # E.g. we should call iteration ended here, weights are kept the same
     iteration_ended(session["iteration"] - 1, session["selected_movie_indices"], session["weights"])    
+    # Increase iteration
+    session["iteration"] += 1
     # And generate new recommendations
     prepare_recommendations()
     # And shift the permutation
@@ -185,7 +215,7 @@ def prepare_recommendations():
     # We always take relevance_based algorithm and add one randomly chosen algorithm to it
     rnd_algorithms = algorithms[1:] # Randomly choosing between rlprop and weighted_average
     random.shuffle(rnd_algorithms)
-    algorithms = ["rlprop", "weighted_average"] #algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
+    algorithms = algorithms[:1] + rnd_algorithms[:1] # Take relevance_based + one random algorithm
     print(f"Chosen algorithms = {algorithms}")
 
     mov_indices = []
@@ -287,10 +317,29 @@ def refine_results():
     return redirect(url_for("plugin1.compare_algorithms"))
 
 @bp.route("/final-questionare")
+@multi_lang
 def final_questionare():
+    params = {
+        "iteration": session["iteration"]
+    }
+
+    tr = get_tr(languages, get_lang())
+    params["contacts"] = tr("footer_contacts")
+    params["contact"] = tr("footer_contact")
+    params["charles_university"] = tr("footer_charles_university")
+    params["cagliary_university"] = tr("footer_cagliary_university")
+    params["t1"] = tr("footer_t1")
+    params["t2"] = tr("footer_t2")
+    params["title"] = tr("final_title")
+    params["header"] = tr("final_header")
+    params["finish"] = tr("final_finish")
+    params["hint"] = tr("final_hint")
+
+    params["premature"] = False
     if session["iteration"] < TOTAL_ITERATIONS:
-        return render_template("final_questionare.html", iteration=session["iteration"], premature=True)
-    return render_template("final_questionare.html", iteration=session["iteration"], premature=False)
+        params["premature"] = True
+
+    return render_template("final_questionare.html", **params)
 
 
 def iteration_started(iteration, weights, movies, algorithm_assignment, result_layout, refinement_layout):
@@ -329,13 +378,27 @@ def iteration_ended(iteration, selected, new_weights):
 
 
 @bp.route("/finish-user-study")
+@multi_lang
 def finish_user_study():
     print("##########################@@@@@@@@@@@@@@@@@@@@")
     print(session["participation_id"])
     # print(Participation.query.filter(Participation.id == session["participation_id"]))
     Participation.query.filter(Participation.id == session["participation_id"]).update({"time_finished": datetime.datetime.utcnow()})
     db.session.commit()
-    return render_template("finished_user_study.html")
+
+    params = {}
+    tr = get_tr(languages, get_lang())
+    params["contacts"] = tr("footer_contacts")
+    params["contact"] = tr("footer_contact")
+    params["charles_university"] = tr("footer_charles_university")
+    params["cagliary_university"] = tr("footer_cagliary_university")
+    params["t1"] = tr("footer_t1")
+    params["t2"] = tr("footer_t2")
+    params["title"] = tr("finish_title")
+    params["header"] = tr("finish_header")
+    params["hint"] = tr("finish_hint")
+
+    return render_template("finished_user_study.html", **params)
 
 @bp.route("/step2", methods=["GET"])
 def step2():

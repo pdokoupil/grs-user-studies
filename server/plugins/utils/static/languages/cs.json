@@ -46,5 +46,6 @@
     "elicitation_cancel_search": "Zrušit hledání",
     "elicitation_enter_name": "Zadejte název filmu",
     "elicitation_header": "Preference Elicitation",
-    "elicitation_hint": "TODO"
+    "elicitation_hint": "TODO",
+    "elicitation_title": "Preference Elicitation"
 }
