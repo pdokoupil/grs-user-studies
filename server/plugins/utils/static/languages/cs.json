@@ -41,11 +41,11 @@
     "footer_t1": "Tato studie vznikla na",
     "footer_t2": "ve spolupráci s",
     "elicitation_load_more": "Načíst další",
-    "elicitation_finish": "Dokončit preference elicitation a pokračovat",
+    "elicitation_finish": "Dokončit získávání preferencí a pokračovat",
     "elicitation_search": "Hledat",
     "elicitation_cancel_search": "Zrušit hledání",
     "elicitation_enter_name": "Zadejte název filmu",
-    "elicitation_header": "Preference Elicitation",
+    "elicitation_header": "Získávání Preferencí",
     "elicitation_hint": "Které z doporučených filmů byste zvažovali shlédnout? Pokud se Vám žádný z doporučených filmů nelíbí, zaškrtněte prosím tlačítko dole na této stránce. Tento krok nám pomůže identifikovat a lépe porozumět Vaším preferencím.",
-    "elicitation_title": "Preference Elicitation"
+    "elicitation_title": "Získávání Preferencí"
 }
