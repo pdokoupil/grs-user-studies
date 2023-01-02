@@ -35,7 +35,7 @@ print(f"Languages={languages}")
 
 # Map internal algorithm names to those displayed to user
 algorithm_name_mapping = {
-    "rlprop": "beta",
+    #"rlprop": "beta",
     "relevance_based": "gamma",
     "weighted_average": "delta"
 }
@@ -132,7 +132,7 @@ def compare_algorithms():
         "movies": movies,
         "iteration": session["iteration"],
         "result_layout": result_layout,
-        "MIN_ITERATION_TO_CANCEL": MIN_ITERATION_TO_CANCEL
+        "MIN_ITERATION_TO_CANCEL": len(result_layout_variants)
     }
 
     tr = get_tr(languages, get_lang())

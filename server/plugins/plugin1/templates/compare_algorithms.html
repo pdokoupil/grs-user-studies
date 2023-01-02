@@ -141,17 +141,19 @@
         </b-row>
         <b-row class="text-center mb-5" align-h="center">
             <b-col center class="align-middle">
-                {% if iteration >= MIN_ITERATION_TO_CANCEL %}
-                <b-form method="GET" action="{{ url_for('plugin1.finish_user_study') }}">
-                    <b-btn block type="submit" variant="danger" center>{{finish}}</b-btn>
-                </b-form>
-                {% endif %}
+                
             </b-col>
             <b-col center class="align-middle">
+                {% if iteration < MIN_ITERATION_TO_CANCEL %}
                 <b-form method="GET" action="{{ url_for('plugin1.algorithm_feedback') }}">
                     <input type="hidden" hidden="true" :value="selectedMovieIndices" name="selected_movies"/>
                     <b-button type="submit" block variant="primary" :disabled="!allValidated" center>{{next}}</b-button>
                 </b-form>
+                {% else %}
+                <b-form method="GET" action="{{ url_for('plugin1.finish_user_study') }}">
+                    <b-btn block type="submit" variant="success" center>{{finish}}</b-btn>
+                </b-form>
+                {% endif %}
             </b-col>
             <b-col></b-col>
         </b-row>
