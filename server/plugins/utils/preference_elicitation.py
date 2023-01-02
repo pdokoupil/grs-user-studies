@@ -81,7 +81,7 @@ result_layout_variants = [
 ]
 
 # Loads the movielens dataset
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def load_ml_dataset(ml_variant="ml-latest"):
     cache_path = os.path.join(basedir, "static", "ml-latest", "data_cache.pckl")
     if os.path.exists(cache_path):
@@ -554,7 +554,7 @@ def calculate_weight_estimate(selected_movies, elicitation_movies):
     return result / result.sum()
 
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def prepare_wrapper_once():
     loader = load_ml_dataset()
 
