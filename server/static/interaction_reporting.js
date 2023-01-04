@@ -108,6 +108,27 @@ function startViewportChangeReportingWithLimit(endpoint, csrfToken, timeLimitSec
     });
 }
 
+// Starts listening for scrolling and posts them to the given endpoint
+// initialReport parameter allow us to report about current values
+// (this is especially useful if we want to report initial viewport dimensions, before any user action)
+// This overloads also accepts elements on which we listen for scroll events
+function startScrollReportingWithLimit(endpoint, csrfToken, timeLimitSeconds, elements, extraCtxLambda=()=>"") {
+    if (elements == null || elements == undefined || elements.length === 0) {
+        return;
+    }
+    var lastReported = new Date();
+    for (let i in elements) {
+        elements[i].addEventListener("scroll", function(e) {
+            let now = new Date();
+            if ((now - lastReported) / 1000 > timeLimitSeconds) {
+                reportViewportChange(endpoint, csrfToken, extraCtxLambda);
+                lastReported = now;
+                console.log(endpoint);
+            }
+        });
+    }
+}
+
 // Used for reporting clicked buttons, options, checkboxes, ratings, etc.
 function reportOnInput(endpoint, csrfToken, inputType, data, extraCtxLambda=()=>"") {
     data["context"] = getContext(extraCtxLambda());

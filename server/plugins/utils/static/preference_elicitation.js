@@ -16,7 +16,7 @@ function elicitation_ctx_lambda() {
                 "viewport": getElementBoundingBox(x)
             };
         }),
-    }
+    };
 }
 
 window.app = new Vue({

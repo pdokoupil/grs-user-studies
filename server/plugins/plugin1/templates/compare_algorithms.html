@@ -11,15 +11,16 @@
             <strong>{{note}}:</strong> {{note_text}}
         </b-jumbotron>
 
+        <!-- https://stackoverflow.com/questions/43999618/how-to-define-a-temporary-variable-in-vue-js-template -->
         <b-row>
             {% if result_layout == "columns" or result_layout == "column-single" %}
-            <b-col v-for="variantResults in variantsResults" :class="variantsResults.indexOf(variantResults) == variantsResults.length - 1 ? 'verticalSeparator' : ''">
+            <b-col v-for="variantResults in variantsResults" :set="algoIdx = variantsResults.indexOf(variantResults)" :class="algoIdx == variantsResults.length - 1 ? 'verticalSeparator' : ''">
                 <b-row align-h="center">
-                    <h2>{{algorithm}} [[ variantNames[variantsResults.indexOf(variantResults)] ]]</h2>
+                    <h2>{{algorithm}} [[ variantNames[algoIdx] ]]</h2>
                 </b-row>
                 <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
                     <b-col sm="auto" class="align-middle" v-for="col in row">
-                        <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                        <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
                     </b-col>
                 </b-row>
                 <b-row align-h="center">
@@ -31,12 +32,12 @@
             </b-col>
             {%elif result_layout == "rows" or result_layout == "row-single" %}
             <b-col align-h="center">
-                <b-row align-h="center" v-for="variantResults in variantsResults">
+                <b-row align-h="center" v-for="variantResults in variantsResults" :set="algoIdx = variantsResults.indexOf(variantResults)">
                     <b-col class="text-center" align-h="center">
-                        <h2>{{algorithm}} [[ variantNames[variantsResults.indexOf(variantResults)] ]]</h2>
+                        <h2>{{algorithm}} [[ variantNames[algoIdx] ]]</h2>
                         <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
                             <b-col sm="auto" class="align-middle" v-for="col in row">
-                                <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                                <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
                             </b-col>
                         </b-row>
                         <b-row align-h="center">
@@ -47,39 +48,24 @@
                         </b-row>
                         
                         <!-- Separator (except for after last one) -->
-                        <b-row v-if="variantsResults.indexOf(variantResults) < variantsResults.length - 1" class="mt-5 mb-5">
+                        <b-row v-if="algoIdx < variantsResults.length - 1" class="mt-5 mb-5">
                             <b-container fluid>
                                 <div style="height: 10px; background-color: red;"></div>
                             </b-container>
                         </b-row>
                     </b-col>
-                    <!-- <b-row align-h="center">
-                        <h2>Algorithm [[ variantsResults.indexOf(variantResults) + 1 ]]</h2>
-                    </b-row>
-                    <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
-                        <b-col sm="auto" class="align-middle" v-for="col in row">
-                            <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
-                        </b-col>
-                    </b-row>
-                    <b-row align-h="center">
-                        <b-col sm="4">
-                            <label for="rating-lg" class="mt-3">Satisfaction with the algorithm's output</label>
-                            <b-form-rating :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))" v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))" show-value show-value-max id="rating-lg" size="lg"></b-form-rating>
-                        </b-col>
-                    </b-row>
-                    <br> -->
                 </b-row>
             </b-col>
             {%elif result_layout == "row-single-scrollable" %}
 
             <b-col align-h="center">
                 <b-row align-h="center" v-for="variantResults in variantsResults">
-                    <div  style="max-width: 100%;">
+                    <div style="max-width: 100%;" :set="algoIdx = variantsResults.indexOf(variantResults)">
                     <!-- <b-col class="text-center align-middle" align-h="center"> -->
-                        <h2>{{algorithm}} [[ variantNames[variantsResults.indexOf(variantResults)] ]]</h2>
-                        <div style="overflow-x: auto; scroll-snap-type: x mandatory; display: flex; flex-wrap: nowrap; align-items: center; width: 100%; text-align: left;" v-for="row in variantResults">
+                        <h2>{{algorithm}} [[ variantNames[algoIdx] ]]</h2>
+                        <div :id="variantNames[algoIdx] + '-scrollableDiv'" name="scrollableDiv" style="overflow-x: auto; scroll-snap-type: x mandatory; display: flex; flex-wrap: nowrap; align-items: center; width: 100%; text-align: left;" v-for="row in variantResults">
                             <div style="scroll-snap-align: center; margin-right: 1px; flex: 0 0 auto;" sm="auto" class="mr-3" v-for="col in row">
-                                <b-img style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                                <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" style="width: 200px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
                             </div>
                         </div>
                         <b-row align-h="center" align-v="center">
@@ -96,7 +82,7 @@
                         </b-row>
                         
                         <!-- Separator (except for after last one) -->
-                        <b-row v-if="variantsResults.indexOf(variantResults) < variantsResults.length - 1" class="mt-5 mb-5">
+                        <b-row v-if="algoIdx < variantsResults.length - 1" class="mt-5 mb-5">
                             <b-container fluid>
                                 <div style="height: 10px; background-color: red;"></div>
                             </b-container>
@@ -175,6 +161,21 @@
     {% elif result_layout == "row-single-scrollable" %}
     var itemsPerRow = 1000;
     {% endif %}
+
+    function compare_ctx_lambda() {
+        return {
+            "items": Array.from(document.getElementsByTagName("img")).map(x => {
+                return {
+                    "id": x.id, // Corresponds to movie idx
+                    "name": x.name,
+                    "url": x.src,
+                    "title": x.title,
+                    "viewport": getElementBoundingBox(x)
+                };
+            }),
+            "movie_scroll": true
+        };
+    }
 </script>
 <script src="{{url_for('static', filename='interaction_reporting.js')}}"></script>
 {{ emit_assets('plugin1','compare_algorithms.js') }}     

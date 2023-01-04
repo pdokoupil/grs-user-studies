@@ -114,6 +114,7 @@ window.app = new Vue({
             }
             reportOnInput("/utils/on-input", csrfToken, "rating", {
                 "variant": algorithmIndex,
+                "variant_name": this.variantNames[algorithmIndex],
                 "old_rating": oldRating,
                 "new_rating": newRating
             });
@@ -134,21 +135,8 @@ window.app = new Vue({
         const chckbxs = document.querySelectorAll("input[type=checkbox]");
         const radios = document.querySelectorAll("input[type=radio]");
         // Register the handlers for event reporting
-        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, true, ()=>
-            {
-                return {
-                    "items": Array.from(document.getElementsByTagName("img")).map(x => {
-                        return {
-                            "id": x.id, // Corresponds to movie idx
-                            "name": x.name,
-                            "url": x.src,
-                            "title": x.title,
-                            "viewport": getElementBoundingBox(x)
-                        };
-                    }),
-                }
-            }
-        );
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, true, compare_ctx_lambda);
+        startScrollReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, document.getElementsByName("scrollableDiv"), compare_ctx_lambda);
         registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns);
         registerClickedCheckboxReporting("/utils/on-input", csrfToken, chckbxs);
         registerClickedRadioReporting("/utils/on-input", csrfToken, radios);
