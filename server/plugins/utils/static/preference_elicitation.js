@@ -3,6 +3,21 @@ function preference_elicitation() {
 
 }
 
+var updatedOnce = false;
+
+function elicitation_ctx_lambda() {
+    return {
+        "items": Array.from(document.getElementsByTagName("img")).map(x => {
+            return {
+                "id": x.id, // Corresponds to movie idx
+                "name": x.name,
+                "url": x.src,
+                "title": x.title,
+                "viewport": getElementBoundingBox(x)
+            };
+        }),
+    }
+}
 
 window.app = new Vue({
     el: '#app',
@@ -27,9 +42,6 @@ window.app = new Vue({
         rowsBackup: null
     }
     },
-    updated() {
-        console.log("Called update");
-    },
     async mounted() {
         console.log("Mounted was called {{impl}}");
 
@@ -50,21 +62,7 @@ window.app = new Vue({
         this.items = res["items"];
 
         // Register the handlers for event reporting
-        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, true, ()=>
-            {
-                return {
-                    "items": Array.from(document.getElementsByTagName("img")).map(x => {
-                        return {
-                            "id": x.id, // Corresponds to movie idx
-                            "name": x.name,
-                            "url": x.src,
-                            "title": x.title,
-                            "viewport": getElementBoundingBox(x)
-                        };
-                    }),
-                }
-            }
-        );
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, true, elicitation_ctx_lambda);
         registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns, ()=>{
             return {
                 "search_text_box_value": this.searchMovieName
@@ -74,6 +72,10 @@ window.app = new Vue({
             return {"impl":impl};
         });
         
+        setTimeout(function () {
+            console.log("Timeout was called");
+            reportViewportChange(`/utils/changed-viewport`, csrfToken, elicitation_ctx_lambda);
+        }, 5000);
     },
     methods: {
         async handlePrefixSearch(movieName) {
