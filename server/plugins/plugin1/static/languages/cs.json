@@ -1,10 +1,11 @@
 {
     "male": "Muž",
-    "compare_header": "Výsledná doporučení",
+    "compare_header": "Vyhodnocení doporučení",
     "note": "Poznámka",
     "algorithm": "Algoritmus",
     "compare_note_text": "pokud se film vyskytuje v doporučeních od více algoritmů, pak při výběru filmu budou automaticky vybrány všechny jeho výskyty.",
-    "compare_hint": "Které z doporučených filmů byste zvažovali shlédnout? Pokud se Vám žádný z doporučených filmů nelíbí, zaškrtněte prosím tlačítko dole na této stránce. Níže prosím odpovězte na otázky týkající se hodnocení výstupu jednotlivých algoritmů.",
+    "compare_hint_lead": "Vyberte filmy, které byste zvažovali shlédnout",
+    "compare_hint": "Filmy se vybírají kliknutím, každý vybraný film je zvýrazněný pomocí zeleného okraje. Pokud se Vám žádný z doporučených filmů nelíbí, zaškrtněte prosím tlačítko dole na této stránce. Níže prosím odpovězte na otázky týkající se hodnocení výstupu jednotlivých algoritmů.",
     "compare_algorithm_satisfaction": "Spokojenost s výstupem algoritmu",
     "compare_like_nothing": "Nelíbí se mi žádný z doporučených filmů.",
     "compare_significantly": "byl znatelně lepší",

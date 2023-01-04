@@ -29,15 +29,18 @@ function getContext(extra="") {
 function reportViewportChange(endpoint, csrfToken, extraCtxLambda=()=>"") {
     data = {
         "viewport": getViewportBoundingBox(),
-        "items": Array.from(document.getElementsByTagName("img")).map(x => {
-            return {
-                "id": x.id, // Corresponds to movie idx
-                "name": x.name,
-                "url": x.src,
-                "title": x.title,
-                "viewport": getElementBoundingBox(x)
-            };
-        }),
+        "screen_sizes": {
+            "window.screen.height": window.screen.height,
+            "document.body.scrollHeight": document.body.scrollHeight,
+            "window.innerHeight": window.innerHeight,
+            "window.screen.availHeight": window.screen.availHeight,
+            "document.body.clientHeight": document.body.clientHeight,
+            "window.screen.width": window.screen.width,
+            "document.body.scrollWidth": document.body.scrollWidth,
+            "window.innerWidth": window.innerWidth,
+            "window.screen.availWidth": window.screen.availWidth,
+            "document.body.clientWidth": document.body.clientWidth
+        },
         "context": getContext(extraCtxLambda())
     }
     return fetch(endpoint,
@@ -59,7 +62,9 @@ function reportViewportChange(endpoint, csrfToken, extraCtxLambda=()=>"") {
 function startViewportChangeReporting(endpoint, csrfToken, initialReport=true, extraCtxLambda=()=>"") {
     
     if (initialReport === true) {
-        reportViewportChange(endpoint, csrfToken, extraCtxLambda); 
+        window.addEventListener("load", function(e) {
+            reportViewportChange(endpoint, csrfToken, extraCtxLambda);
+        });
     }
 
     window.addEventListener("scroll", function(e) {
@@ -77,7 +82,9 @@ function startViewportChangeReporting(endpoint, csrfToken, initialReport=true, e
 // (this is especially useful if we want to report initial viewport dimensions, before any user action)
 function startViewportChangeReportingWithLimit(endpoint, csrfToken, timeLimitSeconds, initialReport=true, extraCtxLambda=()=>"") {
     if (initialReport === true) {
-        reportViewportChange(endpoint, csrfToken, extraCtxLambda); 
+        window.addEventListener("load", function(e) {
+            reportViewportChange(endpoint, csrfToken, extraCtxLambda);
+        });
     }
 
     var lastReported = new Date();

@@ -1,7 +1,9 @@
 {
     "join_title": "Připojit se k uživatelské studii",
     "join_participant_details": "Uživatelské údaje",
-    "join_please_enter_details": "Prosím vyplňte Vaše údaje",
+    "join_about_study": "O studii",
+    "join_study_details": "Tato studie se zaměřuje na vyhodnocení doporučovacích systémů a různých způsobů prezentace doporučení. Tématem studie jsou filmy a její dokončení by Vám nemělo zabrat více než 10-15 minut.",
+    "join_please_enter_details": "Prosím vyplňte Vaše údaje. E-mailová adresa je volitelná, ostatní pole jsou povinná. Pokud se rozhodnete nám sdělit Vaši e-mailovou adresu, budou Vám později zaslány výsledky této studie, případně Vám v budoucnu můžeme zaslat upozornění týkající se nových, navazujících studií.",
     "join_enter_email": "Prosím zadejte Váš e-mail",
     "join_enter_email_hint": "Vaše e-mailová adresa (volitelné)",
     "join_enter_gender": "Prosím vyberte Vaše pohlaví.",
@@ -45,7 +47,8 @@
     "elicitation_search": "Hledat",
     "elicitation_cancel_search": "Zrušit hledání",
     "elicitation_enter_name": "Zadejte název filmu",
-    "elicitation_header": "Získávání Preferencí",
-    "elicitation_hint": "Které z doporučených filmů byste zvažovali shlédnout? Pokud se Vám žádný z doporučených filmů nelíbí, můžete použít tlačítko pro načtení více filmů které se nachází v dolní části stránky. Alternativně můžete použít vyhledávání v horní části obrazovky k nalezení filmů které znáte a které se Vám líbí. Tento krok nám pomůže identifikovat a lépe porozumět Vaším preferencím.",
+    "elicitation_header": "Získávání preferencí",
+    "elicitation_hint_lead": "Vyberte všechny filmy, které jste v minulosti viděli a které se Vám líbí.",
+    "elicitation_hint": "Filmy se vybírají kliknutím, každý vybraný film je zvýrazněný pomocí zeleného okraje. Pokud se Vám žádný z doporučených filmů nelíbí, můžete použít tlačítko pro načtení více filmů které se nachází v dolní části stránky. Alternativně můžete použít vyhledávání v horní části obrazovky k nalezení filmů které znáte a které se Vám líbí. Tento krok nám pomůže identifikovat a lépe porozumět Vaším preferencím. Poznámka: nejnovější filmy v naší databázi jsou z roku 2018.",
     "elicitation_title": "Získávání Preferencí"
 }

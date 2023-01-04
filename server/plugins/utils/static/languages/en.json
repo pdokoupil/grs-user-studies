@@ -1,7 +1,9 @@
 {
-    "join_title": "Join User Study",
+    "join_title": "Join user study",
     "join_participant_details": "Participant details",
-    "join_please_enter_details": "Please enter your details.",
+    "join_about_study": "About",
+    "join_study_details": "This study aims to evaluate recommender systems and different presentation layouts of the recommendations. The study is focused on the movie domain and it is expected to be completed in no more than 10-15 minutes.",
+    "join_please_enter_details": "Please enter your details below. The E-mail address is optional, while all other fields are mandatory. If you decided to give us your e-mail address, we will later share the results of the user study with you and we may also notify you of upcoming followup user studies.",
     "join_enter_email": "Please enter your e-mail",
     "join_enter_email_hint": "Your e-mail address (optional)",
     "join_enter_gender": "Please select your gender",
@@ -31,8 +33,8 @@
     "join_informed_consent_p32": "demographic data of the participant ( age group, education, machine learning familiarity)",
     "join_informed_consent_p33": "participant's responses to individual tasks",
     "join_informed_consent_p4": "In the dataset, there will be no mapping between the ID of the user and his/her true identity (we do not have such data anyway)",
-    "join_informed_consent_p5": "You can stop your participation at any time (just close the browser window:-). You can always revert your consent to use your responses - just write to us with your details (submitted e-mail, time when you started participation etc.) If you did submit your e-mail, but do not want to receive any new messages from us, just write it to us...",
-    "join_informed_consent_p6": "PS: any disputes (hopefully, non should arise:-) will be governed by the law and jurisdiction of Czech Republic",
+    "join_informed_consent_p5": "You can stop your participation at any time (just close the browser window:-). You can always revert your consent to use your responses - just write to us with your details (submitted e-mail, time when you started participation etc.) If you did submit your e-mail, but do not want to receive any new messages from us, just write us an email.",
+    "join_informed_consent_p6": "PS: any disputes (hopefully, none should arise:-) will be governed by the law and jurisdiction of Czech Republic",
     "join_start_user_study": "Start user study",
     "footer_contacts": "contacts",
     "footer_contact": "contact",
@@ -45,7 +47,8 @@
     "elicitation_search": "Search",
     "elicitation_cancel_search": "Cancel search",
     "elicitation_enter_name": "Enter movie name",
-    "elicitation_header": "Preference Elicitation",
-    "elicitation_hint": "Which of the recommended movies would you consider watching tonight? If you do not like any of the recommended movies, there is a button at the bottom that allows you to load more movies. Alternatively, you can use search bar at the top to search for movies that you know and like. This step will help us to identify and better understand your preferences.",
-    "elicitation_title": "Preference Elicitation"
+    "elicitation_header": "Preference elicitation",
+    "elicitation_hint_lead": "Select movies that you have seen and that you like.",
+    "elicitation_hint": "Movies are selected by clicking on them and each selected movie is highlighted in green border. If you do not like any of the recommended movies, there is a button at the bottom that allows you to load more movies. Alternatively, you can use search bar at the top to search for movies that you know and like. This step will help us to identify and better understand your preferences. Let us mention that the newest movies from the database are dated back to 2018.",
+    "elicitation_title": "Preference elicitation"
 }

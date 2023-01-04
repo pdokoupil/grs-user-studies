@@ -1,158 +1,122 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-
-    <title>{{ title }}</title>
-
-    <!-- Required Stylesheets -->
-    <link
-      type="text/css"
-      rel="stylesheet"
-      href="https://unpkg.com/bootstrap@4.6.2/dist/css/bootstrap.min.css"
-    />
-    <link
-      type="text/css"
-      rel="stylesheet"
-      href="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue.css"
-    />
-
-    <!-- Required scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
-
-    
-    <!-- Load polyfills to support older browsers -->
-    <script src="https://unpkg.com/babel-polyfill@6.26.0/dist/polyfill.min.js"></script>
-    
-    <!-- Required scripts -->
-    <script src="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue.js"></script>
-    <script src="https://unpkg.com/bootstrap-vue@2.22.0/dist/bootstrap-vue-icons.js"></script> <!-- Needed just for the Icons -->
-    <style>
-      img.selected {
-          outline: 5px solid green;
-          outline-offset: -5px;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Our application root element -->
-    <div id="app">
-      <b-container fluid>
-        <b-jumbotron header="{{participant_details}}">
-          <p>{{please_enter_details}}</p>
-        </b-jumbotron>
-        <b-row align-h="center">
-          <b-col align-h="center" sm="5">
-            <!-- <b-form method="POST" action="{{continuation_url}}"> -->
-            <b-form method="POST" @submit="onSubmit" action="{{continuation_url}}">
-              <b-form-group
-                horizontal
-              >
-                  <!-- csrf_token is only needed for POST -->
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                  <b-alert :show="showAlert" variant="danger">[[ alertText ]]</b-alert>
-                  <b-row class="mb-3">
-                    <b-col class="mr-3 mt-2" sm="1">
-                      <b-icon id="email-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="email-help" triggers="hover">{{enter_email_hint}}</b-tooltip>
-                    </b-col>
-                    <b-col>
-                      <b-form-input name="email" type="email" placeholder="{{enter_email}}" v-model="userEmail"/>
-                    </b-col>
-                  </b-row>
-                  <b-row class="mb-3">
-                    <b-col class="mr-3 mt-2" sm="1">
-                      <b-icon id="gender-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="gender-help" triggers="hover">{{enter_gender_hint}}</b-tooltip>
-                    </b-col>
-                    <b-col>
-                      <b-form-select v-model="gender" :options="genders" name="gender" :state="gender != null" required="True" type=""></b-form-select>
-                    </b-col>
-                  </b-row>
-                  <b-row class="mb-3">
-                    <b-col class="mr-3 mt-2" sm="1">
-                      <b-icon id="ageGroup-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="ageGroup-help" triggers="hover">{{enter_age_hint}}</b-tooltip>
-                    </b-col>
-                    <b-col>
-                      <b-form-select v-model="ageGroup" :options="ageGroups" name="ageGroup" :state="ageGroup!= null" required="True" type=""></b-form-select>
-                    </b-col>
-                  </b-row>
-                  <b-row class="mb-3">
-                    <b-col class="mr-3 mt-2" sm="1">
-                      <b-icon id="education-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="education-help" triggers="hover">{{enter_education_hint}}</b-tooltip>
-                    </b-col>
-                    <b-col>
-                      <b-form-select v-model="education" :options="educations" name="education" :state="education != null" required="True" type=""></b-form-select>
-                    </b-col>
-                  </b-row>
-                  <b-row align-v="center" class="mb-3">
-                    <b-col align-v="center" class="mr-3 mt-2" sm="1">
-                      <b-icon id="mlFamiliar-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
-                      <b-tooltip target="mlFamiliar-help" triggers="hover">{{enter_ml_familiar}}</b-tooltip>
-                      
-                    </b-col>
-                    <b-col align-h="end">
-                      <b-form-select v-model="mlFamiliar" :options="mlFamiliarOptions" name="mlFamiliar" :state="mlFamiliar != null" required="True" type=""></b-form-select>
-                    </b-col>
-                  </b-row>
-                  <b-row class="mt-5" align-h="center">
-                    <h4>{{informed_consent_header}}</h4>
-                  </b-row>
-                  <b-row align-h="start">
+{% include 'header.html' %}
+<!-- Our application root element -->
+<div id="app">
+  <b-container fluid>
+    <b-jumbotron class="smallJumbotron" header="{{about_study}}">
+      <p>{{study_details}}</p>
+    </b-jumbotron>
+    <b-row align-h="center">
+      <b-col align-h="center" sm="5">
+        <!-- <b-form method="POST" action="{{continuation_url}}"> -->
+        <b-form method="POST" @submit="onSubmit" action="{{continuation_url}}">
+          <b-form-group
+            horizontal
+          >
+              <b-row class="mb-1" align-h="center">
+                <h4>{{participant_details}}</h4>
+              </b-row>
+              <!-- csrf_token is only needed for POST -->
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <b-alert :show="showAlert" variant="danger">[[ alertText ]]</b-alert>
+              <b-row class="mb-3">
+                <b-col class="mr-3 mt-2" sm="1">
+                  <b-icon id="email-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
+                  <b-tooltip target="email-help" triggers="hover">{{enter_email_hint}}</b-tooltip>
+                </b-col>
+                <b-col>
+                  <b-form-input name="email" type="email" placeholder="{{enter_email}}" v-model="userEmail"/>
+                </b-col>
+              </b-row>
+              <b-row class="mb-3">
+                <b-col class="mr-3 mt-2" sm="1">
+                  <b-icon id="gender-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
+                  <b-tooltip target="gender-help" triggers="hover">{{enter_gender_hint}}</b-tooltip>
+                </b-col>
+                <b-col>
+                  <b-form-select v-model="gender" :options="genders" name="gender" :state="gender != null" required="True" type=""></b-form-select>
+                </b-col>
+              </b-row>
+              <b-row class="mb-3">
+                <b-col class="mr-3 mt-2" sm="1">
+                  <b-icon id="ageGroup-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
+                  <b-tooltip target="ageGroup-help" triggers="hover">{{enter_age_hint}}</b-tooltip>
+                </b-col>
+                <b-col>
+                  <b-form-select v-model="ageGroup" :options="ageGroups" name="ageGroup" :state="ageGroup!= null" required="True" type=""></b-form-select>
+                </b-col>
+              </b-row>
+              <b-row class="mb-3">
+                <b-col class="mr-3 mt-2" sm="1">
+                  <b-icon id="education-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
+                  <b-tooltip target="education-help" triggers="hover">{{enter_education_hint}}</b-tooltip>
+                </b-col>
+                <b-col>
+                  <b-form-select v-model="education" :options="educations" name="education" :state="education != null" required="True" type=""></b-form-select>
+                </b-col>
+              </b-row>
+              <b-row align-v="center" class="mb-3">
+                <b-col align-v="center" class="mr-3 mt-2" sm="1">
+                  <b-icon id="mlFamiliar-help" class="h2 mr-2" icon="question-circle-fill" variant="primary"></b-icon>
+                  <b-tooltip target="mlFamiliar-help" triggers="hover">{{enter_ml_familiar}}</b-tooltip>
+                  
+                </b-col>
+                <b-col align-h="end">
+                  <b-form-select v-model="mlFamiliar" :options="mlFamiliarOptions" name="mlFamiliar" :state="mlFamiliar != null" required="True" type=""></b-form-select>
+                </b-col>
+              </b-row>
+              <b-row class="mt-5" align-h="center">
+                <h4>{{informed_consent_header}}</h4>
+              </b-row>
+              <b-row align-h="start">
+                <p>
+                  {{informed_consent_p1}}
+                </p>
+                <ul>
+                  <li>
                     <p>
-                      {{informed_consent_p1}}
+                      {{informed_consent_p2}}
                     </p>
-                    <ul>
-                      <li>
-                        <p>
-                          {{informed_consent_p2}}
-                        </p>
-                      </li>
-                      <li>
-                        <p>
-                          {{informed_consent_p3}}
-                          <ul>
-                            <li>{{informed_consent_p31}}</li>
-                            <li>{{informed_consent_p32}}</li>
-                            <li>{{informed_consent_p33}}</li>
-                          </ul>
-                        </p>
-                      </li>
-                      <li>
-                        <p>
-                          {{informed_consent_p4}}
-                        </p>
-                      </li>
-                      <li>
-                        <p>
-                          {{informed_consent_p5}}
-                        </p>
-                      </li>
-                      <li>
-                        <p>
-                          {{informed_consent_p6}}
-                        </p>
-                      </li>
-                    </ul>
-                    
-                  </b-row>
-                  <b-row  class="mb-3" align-h="end">
-                    <b-button variant="primary" type="submit">{{start_user_study}}</b-button>
-                    <!-- <b-btn variant="primary" v-on:click="handleStartUserStudyClick">Start user study</b-btn> -->
-                  </b-row>
-              </b-form-group>
-            </b-form>
-          </b-col>
-        </b-row>
+                  </li>
+                  <li>
+                    <p>
+                      {{informed_consent_p3}}
+                      <ul>
+                        <li>{{informed_consent_p31}}</li>
+                        <li>{{informed_consent_p32}}</li>
+                        <li>{{informed_consent_p33}}</li>
+                      </ul>
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      {{informed_consent_p4}}
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      {{informed_consent_p5}}
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      {{informed_consent_p6}}
+                    </p>
+                  </li>
+                </ul>
+                
+              </b-row>
+              <b-row  class="mb-1" align-h="end">
+                <b-button variant="primary" type="submit">{{start_user_study}}</b-button>
+                <!-- <b-btn variant="primary" v-on:click="handleStartUserStudyClick">Start user study</b-btn> -->
+              </b-row>
+          </b-form-group>
+        </b-form>
+      </b-col>
+    </b-row>
 
-            
-      </b-container>
-    </div>
+        
+  </b-container>
+</div>
 
     <!-- Start running your app -->
     <script>
@@ -188,8 +152,8 @@
               { value: 0, text: '{{education_no_formal}}' },
               { value: 1, text: '{{education_primary}}' },
               { value: 2, text: '{{education_high}}' },
-              { value: 3, text: '{{education_bachelor}}' },
-              { value: 4, text: '{{education_master}}' },
+              { value: 3, text: "{{education_bachelor|replace("'", "\'")|safe}}" },
+              { value: 4, text: "{{education_master|replace("'", "\'")|safe}}" },
               { value: 5, text: '{{education_doctoral}}'}
             ],
             mlFamiliarOptions: [
@@ -308,5 +272,4 @@
         }
       })
     </script>
-  </body>
-</html>
+{% include 'footer.html' %}

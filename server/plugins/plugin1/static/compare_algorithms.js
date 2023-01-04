@@ -134,7 +134,21 @@ window.app = new Vue({
         const chckbxs = document.querySelectorAll("input[type=checkbox]");
         const radios = document.querySelectorAll("input[type=radio]");
         // Register the handlers for event reporting
-        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, true, ()=>
+            {
+                return {
+                    "items": Array.from(document.getElementsByTagName("img")).map(x => {
+                        return {
+                            "id": x.id, // Corresponds to movie idx
+                            "name": x.name,
+                            "url": x.src,
+                            "title": x.title,
+                            "viewport": getElementBoundingBox(x)
+                        };
+                    }),
+                }
+            }
+        );
         registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns);
         registerClickedCheckboxReporting("/utils/on-input", csrfToken, chckbxs);
         registerClickedRadioReporting("/utils/on-input", csrfToken, radios);

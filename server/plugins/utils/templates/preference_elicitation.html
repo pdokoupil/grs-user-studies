@@ -4,7 +4,7 @@
     <!-- <b-jumbotron v-if="{{impl}}==2" :header="jumboHeader" lead="Random sampling based on popularity"></b-jumbotron>
     <b-jumbotron v-else-if="{{impl}}==3" :header="jumboHeader" lead="Random sampling based on popularity buckets"></b-jumbotron>
     <b-jumbotron v-else-if="{{impl}}==1" :header="jumboHeader" lead="Random sampling based on relevance, diversity and novelty buckets"></b-jumbotron> -->
-    <b-jumbotron class="smallJumbotron" header="{{header}}">
+    <b-jumbotron lead="{{hint_lead}}" class="smallJumbotron" header="{{header}}">
       {{hint}}
     </b-jumbotron>
     <i class="{{impl}}" id="impl"></i>

@@ -27,6 +27,9 @@ window.app = new Vue({
         rowsBackup: null
     }
     },
+    updated() {
+        console.log("Called update");
+    },
     async mounted() {
         console.log("Mounted was called {{impl}}");
 
@@ -35,17 +38,6 @@ window.app = new Vue({
         // This was used for reporting as previously reporting endpoints were defined inside plugin
         console.log(`Consuming plugin is: ${consumingPlugin}`);
 
-        // Register the handlers for event reporting
-        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
-        registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns, ()=>{
-            return {
-                "search_text_box_value": this.searchMovieName
-            };
-        });
-        reportLoadedPage(`/utils/loaded-page`, csrfToken, "preference_elicitation", ()=>{
-            return {"impl":impl};
-        });
-        
         // Get the number of items user is supposed to select
         console.log(this.items);
         console.log("Querying cluster data");
@@ -56,6 +48,31 @@ window.app = new Vue({
         res = this.prepareTable(data);
         this.rows = res["rows"];
         this.items = res["items"];
+
+        // Register the handlers for event reporting
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, true, ()=>
+            {
+                return {
+                    "items": Array.from(document.getElementsByTagName("img")).map(x => {
+                        return {
+                            "id": x.id, // Corresponds to movie idx
+                            "name": x.name,
+                            "url": x.src,
+                            "title": x.title,
+                            "viewport": getElementBoundingBox(x)
+                        };
+                    }),
+                }
+            }
+        );
+        registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns, ()=>{
+            return {
+                "search_text_box_value": this.searchMovieName
+            };
+        });
+        reportLoadedPage(`/utils/loaded-page`, csrfToken, "preference_elicitation", ()=>{
+            return {"impl":impl};
+        });
         
     },
     methods: {
