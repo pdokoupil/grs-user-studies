@@ -148,6 +148,7 @@ def compare_algorithms():
     params["algorithm"] = tr("algorithm")
     params["note_text"] = tr("compare_note_text")
     params["hint"] = tr("compare_hint")
+    params["hint_lead"] = tr("compare_hint_lead")
     params["algorithm_satisfaction"] = tr("compare_algorithm_satisfaction")
     params["like_nothing"] = tr("compare_like_nothing")
     params["significantly"] = tr("compare_significantly")

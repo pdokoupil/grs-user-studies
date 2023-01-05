@@ -113,11 +113,8 @@ function startViewportChangeReportingWithLimit(endpoint, csrfToken, timeLimitSec
 // (this is especially useful if we want to report initial viewport dimensions, before any user action)
 // This overloads also accepts elements on which we listen for scroll events
 function startScrollReportingWithLimit(endpoint, csrfToken, timeLimitSeconds, elements, extraCtxLambda=()=>"") {
-    if (elements == null || elements == undefined || elements.length === 0) {
-        return;
-    }
     var lastReported = new Date();
-    for (let i in elements) {
+    for (let i = 0; i < elements.length; ++i) {
         elements[i].addEventListener("scroll", function(e) {
             let now = new Date();
             if ((now - lastReported) / 1000 > timeLimitSeconds) {
