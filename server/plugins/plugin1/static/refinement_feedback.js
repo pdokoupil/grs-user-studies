@@ -247,7 +247,7 @@ window.app = new Vue({
         const btns = document.querySelectorAll(".btn");
         
         // Register the handlers for event reporting
-        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0);
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 1.0);
         registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns);
         reportLoadedPage(`/utils/loaded-page`, csrfToken, "refinement_feedback", ()=>
             {

@@ -31,7 +31,7 @@ window.app = new Vue({
             moviesColumnified.push(variantResultsColumnified);
             ++numAlgorithms;
         }
-        
+
         console.log(moviesColumnified);
         return {
             variantsResults: moviesColumnified,
@@ -45,7 +45,9 @@ window.app = new Vue({
             dontLikeAnythingValue: false,
             algorithm1Q1Value: 0,
             algorithm2Q1Value: 0,
-            variantNames: variantNames
+            variantNames: variantNames,
+            imageHeight: 300,
+            maxColumnsMaxWidth: 300
         }
     },
     computed: {
@@ -127,6 +129,28 @@ window.app = new Vue({
                 return "success";
             }
             return "danger";
+        },
+        updateImageHeight() {
+            if (window.innerHeight <= 750) {
+                this.imageHeight = 150;
+            } else if (window.innerHeight <= 950) {
+                this.imageHeight = 200;
+            } else {
+                this.imageHeight = 300;
+            }
+        },
+        updateMaxColumnsMaxWidth() {
+            console.log("Updating");
+            if (window.innerWidth <= 1300) {
+                this.maxColumnsMaxWidth = 140;
+            } else {
+                this.maxColumnsMaxWidth = 300;
+            }
+            console.log(this.maxColumnsMaxWidth);
+        },
+        updateResolutions() {
+            this.updateImageHeight();
+            this.updateMaxColumnsMaxWidth();
         }
     },
     async mounted() {
@@ -135,8 +159,8 @@ window.app = new Vue({
         const chckbxs = document.querySelectorAll("input[type=checkbox]");
         const radios = document.querySelectorAll("input[type=radio]");
         // Register the handlers for event reporting
-        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, true, compare_ctx_lambda);
-        startScrollReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, document.getElementsByName("scrollableDiv"), compare_ctx_lambda);
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 1.0, true, compare_ctx_lambda);
+        startScrollReportingWithLimit(`/utils/changed-viewport`, csrfToken, 1.0, document.getElementsByName("scrollableDiv"), compare_ctx_lambda);
         registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns);
         registerClickedCheckboxReporting("/utils/on-input", csrfToken, chckbxs);
         registerClickedRadioReporting("/utils/on-input", csrfToken, radios);
@@ -150,5 +174,8 @@ window.app = new Vue({
                 };
             }
         );
+
+        this.updateResolutions();
+        window.addEventListener("resize", this.updateResolutions);
     }
 })

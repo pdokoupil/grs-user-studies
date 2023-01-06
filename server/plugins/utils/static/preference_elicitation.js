@@ -62,7 +62,7 @@ window.app = new Vue({
         this.items = res["items"];
 
         // Register the handlers for event reporting
-        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 5.0, true, elicitation_ctx_lambda);
+        startViewportChangeReportingWithLimit(`/utils/changed-viewport`, csrfToken, 1.0, true, elicitation_ctx_lambda);
         registerClickedButtonReporting(`/utils/on-input`, csrfToken, btns, ()=>{
             return {
                 "search_text_box_value": this.searchMovieName

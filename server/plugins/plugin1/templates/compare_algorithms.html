@@ -18,15 +18,15 @@
                 <b-row align-h="center">
                     <h5>{{algorithm}} [[ variantNames[algoIdx] ]]</h5>
                 </b-row>
-                <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
+                <b-row align-h="center" class="mb-1 mt-1" v-for="row in variantResults">
                     <b-col sm="auto" class="align-middle" v-for="col in row">
                         <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" style="width: 175px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
                     </b-col>
                 </b-row>
                 <b-row align-h="center">
                     <b-col sm="4">
-                        <label for="rating-lg" class="mt-3">{{algorithm_satisfaction}}</label>
-                        <b-form-rating :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))" v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))" show-value show-value-max id="rating-lg" size="lg"></b-form-rating>
+                        <label for="rating-sm" class="mt-1">{{algorithm_satisfaction}}</label>
+                        <b-form-rating :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))" v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))" show-value show-value-max id="rating-sm" size="sm"></b-form-rating>
                     </b-col>
                 </b-row>
             </b-col>
@@ -35,20 +35,24 @@
                 <b-row align-h="center" v-for="variantResults in variantsResults" :set="algoIdx = variantsResults.indexOf(variantResults)">
                     <b-col class="text-center" align-h="center">
                         <h5>{{algorithm}} [[ variantNames[algoIdx] ]]</h5>
-                        <b-row align-h="center" class="mb-2 mt-2" v-for="row in variantResults">
-                            <b-col sm="auto" class="align-middle" v-for="col in row">
-                                <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" style="width: 175px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                        <b-row align-h="center" class="mb-1 mt-1" v-for="row in variantResults">
+                            {% if result_layout == "rows" %}
+                            <b-col lg="*" xl="auto" class="align-middle" v-for="col in row">
+                            {% else %}
+                            <b-col class="align-middle" v-for="col in row">
+                            {% endif %}
+                                <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" fluid :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
                             </b-col>
                         </b-row>
                         <b-row align-h="center">
-                            <b-col sm="4">
-                                <label for="rating-lg" class="mt-3">{{algorithm_satisfaction}}</label>
-                                <b-form-rating :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))" v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))" show-value show-value-max id="rating-lg" size="lg"></b-form-rating>
+                            <b-col cols="4">
+                                <label for="rating-sm" class="mt-1">{{algorithm_satisfaction}}</label>
+                                <b-form-rating :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))" v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))" show-value show-value-max id="rating-sm" size="sm"></b-form-rating>
                             </b-col>
                         </b-row>
                         
                         <!-- Separator (except for after last one) -->
-                        <b-row v-if="algoIdx < variantsResults.length - 1" class="mt-5 mb-5">
+                        <b-row v-if="algoIdx < variantsResults.length - 1" class="mt-1 mb-1">
                             <b-container fluid>
                                 <div style="height: 10px; background-color: red;"></div>
                             </b-container>
@@ -59,20 +63,20 @@
             {%elif result_layout == "row-single-scrollable" %}
 
             <b-col align-h="center">
-                <b-row align-h="center" v-for="variantResults in variantsResults">
-                    <div style="max-width: 100%;" :set="algoIdx = variantsResults.indexOf(variantResults)">
-                    <!-- <b-col class="text-center align-middle" align-h="center"> -->
+                <b-row align-h="center" v-for="variantResults in variantsResults" :set="algoIdx = variantsResults.indexOf(variantResults)">
+                    <!-- <div class="text-center" style="max-width: 100%;" > -->
+                    <b-col class="text-center align-middle" align-h="center" xl="6" sm="auto" md=auto lg="auto" >
                         <h5>{{algorithm}} [[ variantNames[algoIdx] ]]</h5>
-                        <div :id="variantNames[algoIdx] + '-scrollableDiv'" name="scrollableDiv" style="overflow-x: auto; scroll-snap-type: x mandatory; display: flex; flex-wrap: nowrap; align-items: center; width: 100%; text-align: left;" v-for="row in variantResults">
-                            <div style="scroll-snap-align: center; margin-right: 1px; flex: 0 0 auto;" sm="auto" class="mr-3" v-for="col in row">
-                                <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" style="width: 175px; height: auto;" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                        <div :id="variantNames[algoIdx] + '-scrollableDiv'" name="scrollableDiv" style="overflow-x: auto; scroll-snap-type: x mandatory; white-space: nowrap; display: flex; flex-wrap: nowrap; align-items: center; width: 100%; text-align: left;" v-for="row in variantResults">
+                            <div style="scroll-snap-align: center; margin-right: 1px; flex: 0 0 auto;" cols="auto" class="mr-3" v-for="col in row">
+                                <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" :style="{width: 'auto', height: imageHeight + 'px'}" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
                             </div>
                         </div>
-                        <b-row align-h="center" align-v="center">
-                            <b-col cols="4">
+                        <b-row align-v="center">
+                            <b-col align-h="start">
                                 <label for="rating-sm" class="mt-1">{{algorithm_satisfaction}}</label>
                             </b-col>
-                            <b-col cols="4">
+                            <b-col align-h="end">
                                 <b-form-rating
                                     class="mt-1" :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))"
                                     v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))"
@@ -87,8 +91,25 @@
                                 <div style="height: 10px; background-color: red;"></div>
                             </b-container>
                         </b-row>
-                    <!-- </b-col> -->
-                    </div>
+                    </b-col>
+                    <!-- </div> -->
+                </b-row>
+            </b-col>
+            {%elif result_layout == "max-columns" %}
+            <b-col v-for="variantResults in variantsResults" :set="algoIdx = variantsResults.indexOf(variantResults)" :class="variantsResults.indexOf(variantResults) == variantsResults.length - 1 ? 'verticalSeparator' : ''">
+                <b-row align-h="center">
+                    <h5>{{algorithm}} [[ variantNames[algoIdx] ]]</h5>
+                </b-row>
+                <b-row align-h="center" align-v="center" class="mb-1 mt-1" v-for="row in variantResults">
+                    <b-col lg="4" xl="auto" class="align-middle" v-for="col in row">
+                        <b-img :id="variantNames[algoIdx] + '_' + col.movie_idx" fluid :style="{ 'max-width': maxColumnsMaxWidth + 'px' }" center :src="col.url" v-on:click="onSelectMovie($event, col, variantsResults.indexOf(variantResults))" :name="col.movie_idx" :alt="col.movie" v-b-tooltip.hover :title="col.movie" />
+                    </b-col>
+                </b-row>
+                <b-row align-h="center">
+                    <b-col sm="4">
+                        <label for="rating-sm" class="mt-1">{{algorithm_satisfaction}}</label>
+                        <b-form-rating :variant="algorithmQ1Variant(variantsResults.indexOf(variantResults))" v-on:change="onAlgorithmRatingChanged($event, variantsResults.indexOf(variantResults))" show-value show-value-max id="rating-sm" size="sm"></b-form-rating>
+                    </b-col>
                 </b-row>
             </b-col>
             {% endif %}
@@ -103,7 +124,7 @@
             </b-form-checkbox>
         </b-row>
         <b-row class="mt-3 ml-1 mr-1" align-h="center">
-            <b-form-group label="How would you compare the two algorithms?" v-slot="{ ariaDescribedby }">
+            <b-form-group label-align="center" label="How would you compare the two algorithms?" v-slot="{ ariaDescribedby }">
                 <b-form-radio-group
                   id="radio-group-2"
                   :aria-describedby="ariaDescribedby"
@@ -159,6 +180,8 @@
     {% elif result_layout == "row-single" %}
     var itemsPerRow = 10;
     {% elif result_layout == "row-single-scrollable" %}
+    var itemsPerRow = 1000;
+    {% elif result_layout == "max-columns" %}
     var itemsPerRow = 1000;
     {% endif %}
 
