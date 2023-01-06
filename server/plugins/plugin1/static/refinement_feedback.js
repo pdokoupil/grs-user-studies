@@ -24,7 +24,7 @@ window.app = new Vue({
                 "Much more attention",
                 "Full attention"
             ],
-            newWeights: "0.5,0.25,0.25",
+            newWeights: "",
             newRelevance: 0,
             newDiversity: 0,
             newNovelty: 0
@@ -238,8 +238,11 @@ window.app = new Vue({
             
             //console.log(`Old weights: ${defaultRelevance},${defaultDiversity},${defaultNovelty}`);
             //console.log(`New weights: ${this.newWeights}`);
-
-            event.target.submit();
+            this.$nextTick(() => {
+                //this.$refs.form.submit();
+                event.target.submit();
+            });
+            //event.target.submit();
         },
     },
     async mounted() {
