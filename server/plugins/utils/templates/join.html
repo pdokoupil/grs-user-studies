@@ -118,8 +118,14 @@
   </b-container>
 </div>
 
+    <script src="{{url_for('static', filename='resolution_handling.js')}}"></script>
+    <script src="{{url_for('static', filename='message_reporting.js')}}"></script>
     <!-- Start running your app -->
     <script>
+
+      // This is PLUGIN1 specific !!! move it somewhere else
+      const MIN_WIDTH = 1000;
+      const MIN_HEIGHT = 700;
 
       window.app = new Vue({
         el: '#app',
@@ -183,8 +189,26 @@
             console.log("Submitting");
             console.log("{{continuation_url}}");
             userData = {
-              "email": this.userEmail,
-              "guid": "{{guid}}"
+                "user_email": this.userEmail,
+                "gender": this.gender,
+                "age_group": this.ageGroup,
+                "education": this.education,
+                "ml_familiar": this.mlFamiliar,
+                "user_study_guid": "{{guid}}"
+            };
+
+            // TODO move this to some consumer plugin validation step or at the very early of the plugin
+            // (which is too late here as we have join[util] => pref-elicitation[util] => compare[plugin1])
+            // another possibility is to do it in continuation (read-back viewports from DB)
+            // Probably best alternative is to create extra step, e.g. /plugin1/start?guid that will first check
+            // and only then continue to the utils/join !!!
+            if (!validateScreenResolution(MIN_WIDTH, MIN_HEIGHT)) {
+              this.alertText = "{{min_resolution_error}}";
+              this.showAlert = true;
+              reportError("/utils/on-message", '{{ csrf_token() }}', window.location.href, this.alertText, ()=> {
+                return userData;
+              });
+              return;              
             };
             
             let addParticipantRes = await fetch("{{url_for('main.add_participant')}}", {
@@ -193,14 +217,7 @@
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token() }}'
               },
-              body: JSON.stringify({
-                "user_email": this.userEmail,
-                "gender": this.gender,
-                "age_group": this.ageGroup,
-                "education": this.education,
-                "ml_familiar": this.mlFamiliar,
-                "user_study_guid": "{{guid}}"
-              }),
+              body: JSON.stringify(userData),
             }).then(resp => {
               if (resp.ok) {
                 return true;
@@ -213,11 +230,11 @@
             } else if (addParticipantRes == 404) {
               // Report guid not found error, check your URL
               this.showAlert = true;
-              this.alertText = "User study GUID not found, please check your URL"
+              this.alertText = "{{guid_not_found}}";
             } else {
               // Report server error, try again later
               this.showAlert = true;
-              this.alertText = "Server error, please try again later"
+              this.alertText = "{{server_error}}";
             }
             
           },

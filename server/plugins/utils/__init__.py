@@ -17,7 +17,7 @@ import json
 
 import datetime
 
-from models import Interaction, Participation
+from models import Interaction, Participation, Message
 from app import db
 
 from .popularity_sampling import PopularitySamplingElicitation, PopularitySamplingFromBucketsElicitation
@@ -122,6 +122,9 @@ def join():
     params["informed_consent_p5"] = tr("join_informed_consent_p5")
     params["informed_consent_p6"] = tr("join_informed_consent_p6")
     params["start_user_study"] = tr("join_start_user_study")
+    params["guid_not_found"] = tr("join_guid_not_found")
+    params["server_error"] = tr("join_server_error")
+    params["min_resolution_error"] = tr("join_min_resolution_error")
 
     print(f"Final params={params}")
     
@@ -262,6 +265,20 @@ def on_input():
         time = datetime.datetime.utcnow(),
         data = json.dumps(request.get_json())
     )
+    db.session.add(x)
+    db.session.commit()
+    return "OK"
+
+@bp.route("/on-message", methods=["POST"])
+def on_message():
+    x = Message(
+        time = datetime.datetime.utcnow(),
+        data = json.dumps(request.get_json())
+    )
+
+    if "participation_id" in flask.session:
+        x.participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id
+
     db.session.add(x)
     db.session.commit()
     return "OK"

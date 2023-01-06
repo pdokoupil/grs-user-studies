@@ -88,3 +88,14 @@ class Interaction(db.Model):
     # Time when interaction has occurred
     time = db.Column(db.DateTime)
     data = db.Column(db.String)
+
+class Message(db.Model):
+    __tablename__ = "message"
+
+    id = db.Column(db.Integer, primary_key=True)
+    # Not mandatory
+    participation = db.Column(db.Integer, nullable=True)
+    # Time when massage has been received
+    time = db.Column(db.DateTime)
+    # Arbitrary data
+    data = db.Column(db.String)
