@@ -24,7 +24,7 @@ window.app = new Vue({
                 "Much more attention",
                 "Full attention"
             ],
-            newWeights: "",
+            newWeights: "0.5,0.25,0.25",
             newRelevance: 0,
             newDiversity: 0,
             newNovelty: 0
