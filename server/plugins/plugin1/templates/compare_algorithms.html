@@ -37,7 +37,7 @@
                         <h5>{{algorithm}} [[ variantNames[algoIdx] ]]</h5>
                         <b-row align-h="center" class="mb-1 mt-1" v-for="row in variantResults">
                             {% if result_layout == "rows" %}
-                            <b-col lg="*" xl="auto" class="align-middle" v-for="col in row">
+                            <b-col class="col" xl="auto" class="align-middle" v-for="col in row">
                             {% else %}
                             <b-col class="align-middle" v-for="col in row">
                             {% endif %}
@@ -65,7 +65,7 @@
             <b-col align-h="center">
                 <b-row align-h="center" v-for="variantResults in variantsResults" :set="algoIdx = variantsResults.indexOf(variantResults)">
                     <!-- <div class="text-center" style="max-width: 100%;" > -->
-                    <b-col class="text-center align-middle" align-h="center" xl="6" sm="auto" md=auto lg="auto" >
+                    <b-col class="text-center align-middle" align-h="center" xl="6" sm="auto" md=auto lg="6" >
                         <h5>{{algorithm}} [[ variantNames[algoIdx] ]]</h5>
                         <div :id="variantNames[algoIdx] + '-scrollableDiv'" name="scrollableDiv" style="overflow-x: auto; scroll-snap-type: x mandatory; white-space: nowrap; display: flex; flex-wrap: nowrap; align-items: center; width: 100%; text-align: left;" v-for="row in variantResults">
                             <div style="scroll-snap-align: center; margin-right: 1px; flex: 0 0 auto;" cols="auto" class="mr-3" v-for="col in row">
