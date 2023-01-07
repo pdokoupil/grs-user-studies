@@ -206,6 +206,7 @@
               this.alertText = "{{min_resolution_error}}";
               this.showAlert = true;
               reportError("/utils/on-message", '{{ csrf_token() }}', window.location.href, this.alertText, ()=> {
+                userData["screen_sizes"] = getScreenSizes();
                 return userData;
               });
               return;              

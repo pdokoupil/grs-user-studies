@@ -29,18 +29,7 @@ function getContext(extra="") {
 function reportViewportChange(endpoint, csrfToken, extraCtxLambda=()=>"") {
     data = {
         "viewport": getViewportBoundingBox(),
-        "screen_sizes": {
-            "window.screen.height": window.screen.height,
-            "document.body.scrollHeight": document.body.scrollHeight,
-            "window.innerHeight": window.innerHeight,
-            "window.screen.availHeight": window.screen.availHeight,
-            "document.body.clientHeight": document.body.clientHeight,
-            "window.screen.width": window.screen.width,
-            "document.body.scrollWidth": document.body.scrollWidth,
-            "window.innerWidth": window.innerWidth,
-            "window.screen.availWidth": window.screen.availWidth,
-            "document.body.clientWidth": document.body.clientWidth
-        },
+        "screen_sizes": getScreenSizes(),
         "context": getContext(extraCtxLambda())
     }
     return fetch(endpoint,

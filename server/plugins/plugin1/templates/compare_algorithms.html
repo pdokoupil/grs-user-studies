@@ -178,7 +178,7 @@
     {% elif result_layout == "rows" %}
     var itemsPerRow = 5;
     {% elif result_layout == "row-single" %}
-    var itemsPerRow = 10;
+    var itemsPerRow = 1000; // I.e. everything
     {% elif result_layout == "row-single-scrollable" %}
     var itemsPerRow = 1000;
     {% elif result_layout == "max-columns" %}
@@ -200,6 +200,7 @@
         };
     }
 </script>
+<script src="{{url_for('static', filename='resolution_handling.js')}}"></script>
 <script src="{{url_for('static', filename='interaction_reporting.js')}}"></script>
 {{ emit_assets('plugin1','compare_algorithms.js') }}     
 {% include 'footer.html' %}

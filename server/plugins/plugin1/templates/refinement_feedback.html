@@ -198,6 +198,7 @@
     var csrfToken = "{{csrf_token()}}";
     var resultLayout = "{{version}}";
 </script>
+<script src="{{url_for('static', filename='resolution_handling.js')}}"></script>
 <script src="{{url_for('static', filename='interaction_reporting.js')}}"></script>
 {{ emit_assets('plugin1','refinement_feedback.js') }}     
 {% include 'footer.html' %}
