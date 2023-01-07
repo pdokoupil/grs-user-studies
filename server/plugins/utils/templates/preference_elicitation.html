@@ -38,7 +38,9 @@
       </b-table> -->
     <!-- </b-row> -->
     <b-row class="mb-3" align-h="center">
-      <b-col></b-col>
+      <b-col>
+        <b-input id="theK" name="theK" required="True" value="10" type="number" placeholder="ENTER K (Temporary field)"></b-input>
+      </b-col>
       <b-col align-h="center">
         <b-row>
           <b-col><b-input @update="onUpdateSearchMovieName" @keydown="onKeyDownSearchMovieName" v-model="searchMovieName" type="search" placeholder="{{enter_name}}"></b-input></b-col>

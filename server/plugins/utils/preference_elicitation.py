@@ -592,7 +592,7 @@ def enrich_results(top_k, loader):
     top_k_url = [loader.get_image(movie_idx) for movie_idx in top_k]
     return [{"movie": movie, "url": url, "movie_idx": str(movie_idx)} for movie, url, movie_idx in zip(top_k_description, top_k_url, top_k)]
 
-def prepare_wrapper(selected_movies, model, mandate_allocation_factory, obj_weights, filter_out_movies = []):
+def prepare_wrapper(selected_movies, model, mandate_allocation_factory, obj_weights, filter_out_movies = [], k=10):
     loader, items, distance_matrix, users_viewed_item = prepare_wrapper_once()
 
     max_user = loader.ratings_df.userId.max()
@@ -640,33 +640,33 @@ def prepare_wrapper(selected_movies, model, mandate_allocation_factory, obj_weig
     # unseen_items_mask = unseen_items_mask[:1]
 
 
-    discount_sequences = [[1.0] * 10, [1.0] * 10, [1.0] * 10]
+    discount_sequences = [[1.0] * k, [1.0] * k, [1.0] * k]
 
     return loader, RLPropWrapper(items, extended_rating_matrix, distance_matrix, users_viewed_item, normalization_factory, mandate_allocation, unseen_items_mask, cache_dir, discount_sequences)
 
-def rlprop(selected_movies, model, weights, filter_out_movies = []):
+def rlprop(selected_movies, model, weights, filter_out_movies = [], k=10):
     obj_weights = weights
     obj_weights /= obj_weights.sum()
     
 
-    loader, wrapper = prepare_wrapper(selected_movies, model, exactly_proportional_fuzzy_dhondt_2, obj_weights, filter_out_movies)
+    loader, wrapper = prepare_wrapper(selected_movies, model, exactly_proportional_fuzzy_dhondt_2, obj_weights, filter_out_movies, k)
     wrapper.init()
-    x = wrapper(10)
+    x = wrapper(k)
 
     return enrich_results(x[0], loader)
 
-def weighted_average(selected_movies, model, weights, filter_out_movies = []):
+def weighted_average(selected_movies, model, weights, filter_out_movies = [], k=10):
     obj_weights = weights
     obj_weights /= obj_weights.sum()
     
-    loader, wrapper = prepare_wrapper(selected_movies, model, weighted_average_strategy, obj_weights, filter_out_movies)
+    loader, wrapper = prepare_wrapper(selected_movies, model, weighted_average_strategy, obj_weights, filter_out_movies, k)
     wrapper.init()
-    x = wrapper(10)
+    x = wrapper(k)
 
     return enrich_results(x[0], loader)
 
 
-def recommend_2_3(selected_movies, filter_out_movies = [], return_model = False):
+def recommend_2_3(selected_movies, filter_out_movies = [], return_model = False, k = 10):
     loader = load_ml_dataset()
 
     # algo_als = als.BiasedMF(10, iterations=5)
@@ -707,7 +707,7 @@ def recommend_2_3(selected_movies, filter_out_movies = [], return_model = False)
     # Finetune
     start_time = time.perf_counter()
     model.fit(ratings2.concatenate(train.take(100)).batch(256), epochs=2)
-    predictions = tf.squeeze(model.predict_for_user(new_user, ratings2, filter_out_movies_titles)).numpy()
+    predictions = tf.squeeze(model.predict_for_user(new_user, ratings2, filter_out_movies_titles, k)).numpy()
     print(f"Predictions (AFTER FINETUNING) are: {predictions}")
     print(f"Fine tuning took: {time.perf_counter() - start_time}")
 

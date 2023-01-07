@@ -287,6 +287,12 @@ def on_message():
 @bp.route("/send-feedback", methods=["GET"])
 def send_feedback():
     print(f"Args={request.args}")
+
+    k = request.args.get("theK")
+    k = int(k) if k else 10
+    print(f"Setting k={k}")
+    flask.session["rec_k"] = k
+
     impl = request.args.get("impl")
     print(f"Impl='{impl}'")
     # if impl == "1":
@@ -326,14 +332,14 @@ def send_feedback():
     filter_out_movies = selected_movies
 
     # Order of insertion should be preserved
-    recommended_items, model = recommend_2_3(selected_movies, filter_out_movies, return_model=True)
+    recommended_items, model = recommend_2_3(selected_movies, filter_out_movies, return_model=True, k=k)
     for algorithm in algorithms:
         if algorithm == "relevance_based":
             pass
         elif algorithm == "rlprop":
-            recommended_items = rlprop(selected_movies, model, weights, filter_out_movies)
+            recommended_items = rlprop(selected_movies, model, weights, filter_out_movies, k=k)
         elif algorithm == "weighted_average":
-            recommended_items = weighted_average(selected_movies, model, weights, filter_out_movies)
+            recommended_items = weighted_average(selected_movies, model, weights, filter_out_movies, k=k)
         else:
             assert False
         recommendations[algorithm] = [recommended_items]

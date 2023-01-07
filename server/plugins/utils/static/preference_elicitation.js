@@ -192,6 +192,15 @@ window.app = new Vue({
 
             form.appendChild(implTag);
             form.appendChild(selectedMoviesTag);
+
+            
+            
+            let kElement = document.getElementById("theK");
+            if (!kElement.value) {
+                kElement.value = "10";
+            }
+            form.appendChild(kElement);
+
             console.log(form);
             form.submit();
         }

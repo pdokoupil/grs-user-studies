@@ -98,6 +98,17 @@ def step1():
 
 @bp.route("/compare-algorithms", methods=["GET"])
 def compare_algorithms():
+
+    k_param = request.args.get("k")
+    if k_param:
+        x = session["selected_movie_indices"]
+        if not x:
+            x.append([])
+            session["selected_movie_indices"] = x
+            prepare_recommendations(k=int(k_param))
+            session["selected_movie_indices"] = x[:-1]
+        else:
+            prepare_recommendations(k=int(k_param))
     # movies = [session["movies"][-1]]
     # movies.append([movies[0][0]] * len(movies[0]))
     algorithm_assignment = {}
@@ -116,9 +127,9 @@ def compare_algorithms():
 
 
 
-    #result_layout = request.args.get("result_layout")
+    result_layout = request.args.get("result_layout") or "rows"
     #result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
-    result_layout = result_layout_variants[session["permutation"][0]]
+    #result_layout = result_layout_variants[session["permutation"][0]]
     
     # Decide on next refinement layout
     refinement_layout = "3" # Use version 3
@@ -195,7 +206,7 @@ def algorithm_feedback():
     # Increase iteration
     session["iteration"] += 1
     # And generate new recommendations
-    prepare_recommendations()
+    prepare_recommendations(k=session["rec_k"])
     # And shift the permutation
     permutation = session["permutation"]
     permutation = permutation[1:] + permutation[:1] # Move first item to the end
@@ -203,7 +214,7 @@ def algorithm_feedback():
     return redirect(url_for("plugin1.compare_algorithms"))
     ##### END OF NEW, SHORTER VERSION
 
-def prepare_recommendations():
+def prepare_recommendations(k=10):
     mov = session["movies"]
 
     # Randomly chose two algorithms
@@ -224,16 +235,16 @@ def prepare_recommendations():
     filter_out_movies = session["elicitation_selected_movies"] + sum(mov_indices[:HIDE_LAST_K], [])
 
     # Always generate recommendation via relevance based algorithm because we need to get the model (we use it as a baseline)
-    recommended_items, model = recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies, return_model=True)    
+    recommended_items, model = recommend_2_3(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], filter_out_movies, return_model=True, k=k)    
 
     # Order of insertion should be preserved
     for algorithm in algorithms:
         if algorithm == "relevance_based":
             pass
         elif algorithm == "rlprop":
-            recommended_items = rlprop(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], model, np.array(session['weights']), filter_out_movies)
+            recommended_items = rlprop(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], model, np.array(session['weights']), filter_out_movies, k=k)
         elif algorithm == "weighted_average":
-            recommended_items = weighted_average(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], model, np.array(session['weights']), filter_out_movies)
+            recommended_items = weighted_average(session["elicitation_selected_movies"] + session["selected_movie_indices"][-1], model, np.array(session['weights']), filter_out_movies, k=k)
         else:
             assert False
         mov[algorithm][-1] = recommended_items
