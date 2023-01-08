@@ -318,7 +318,7 @@ def send_feedback():
     selected_movies = [int(m) for m in selected_movies]
 
     # Calculate weights based on selection and shown movies during preference elicitation
-    weights = calculate_weight_estimate(selected_movies, flask.session["elicitation_movies"])
+    weights = np.array([0.5, 0.25, 0.25]) #calculate_weight_estimate(selected_movies, flask.session["elicitation_movies"])
     flask.session["weights"] = weights.tolist()
     print(f"### Weights are estimated to {weights}")
 
