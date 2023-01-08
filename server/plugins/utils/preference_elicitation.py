@@ -308,8 +308,14 @@ def load_data_1(elicitation_movies):
     #print([loader.movies_df.iloc[movie_idx].title for movie_idx in data])
     start_time = time.perf_counter()
     # res = [loader.movie_index_to_description[movie_idx] for movie_idx in data]
-    res = [loader.movie_index_to_description[movie_idx] + " # " + extra for movie_idx, extra in zip(data, extra_data)]
-    
+    #res = [loader.movie_index_to_description[movie_idx] + " # " + extra for movie_idx, extra in zip(data, extra_data)]
+
+    # TODO user enrich_results instead
+    movie_ids = [loader.movie_index_to_id[movie_idx] for movie_idx in data]
+    res = [loader.movies_df_indexed.loc[movie_id].title for movie_id in movie_ids]
+    res_genres = [loader.movies_df_indexed.loc[movie_id].genres.split("|") for movie_id in movie_ids]
+    res_genres = [x for x in res_genres if x != ["(no genres listed)"]]
+
     
     #print(f"Movies: {loader.movies_df.movieId.unique().shape}, {loader.links_df.movieId.unique().shape}")
     #imdbIds = [loader.links_df.loc[loader.movie_index_to_id[movie_idx]].imdbId for movie_idx in data]
@@ -319,7 +325,7 @@ def load_data_1(elicitation_movies):
     res_url = [loader.get_image(movie_idx) for movie_idx in data]
     print(f"Getting urls took: {time.perf_counter() - start_time}")
     start_time = time.perf_counter()
-    result = [{"movie": movie, "url": url, "movie_idx": str(movie_idx)} for movie, url, movie_idx in zip(res, res_url, data)]
+    result = [{"movie": movie, "url": url, "movie_idx": str(movie_idx), "genres": genres, "movie_id": movie_id} for movie, url, movie_idx, genres, movie_id in zip(res, res_url, data, res_genres, movie_ids)]
     print(f"Result= {result} and took: {time.perf_counter() - start_time}")
     # Result is a list of movies, each movie being a dict (JSON object)
     return result
@@ -588,9 +594,15 @@ def prepare_wrapper_once():
     return loader, items, distance_matrix, users_viewed_item#, algo, ratings_df
 
 def enrich_results(top_k, loader):
-    top_k_description = [loader.movie_index_to_description[movie_idx] for movie_idx in top_k]
+    
+    top_k_ids = [loader.movie_index_to_id[movie_idx] for movie_idx in top_k]
+    #top_k_description = [loader.movie_index_to_description[movie_idx] for movie_idx in top_k]
+    top_k_description = [loader.movies_df_indexed.loc[movie_id].title for movie_id in top_k_ids]
+    top_k_genres = [loader.movies_df_indexed.loc[movie_id].genres.split("|") for movie_id in top_k_ids]
+    top_k_genres = [x for x in top_k_genres if x != ["(no genres listed)"]]
+    
     top_k_url = [loader.get_image(movie_idx) for movie_idx in top_k]
-    return [{"movie": movie, "url": url, "movie_idx": str(movie_idx)} for movie, url, movie_idx in zip(top_k_description, top_k_url, top_k)]
+    return [{"movie": movie, "url": url, "movie_idx": str(movie_idx), "movie_id": movie_id, "genres": genres} for movie, url, movie_idx, movie_id, genres in zip(top_k_description, top_k_url, top_k, top_k_ids, top_k_genres)]
 
 def prepare_wrapper(selected_movies, model, mandate_allocation_factory, obj_weights, filter_out_movies = [], k=10):
     loader, items, distance_matrix, users_viewed_item = prepare_wrapper_once()

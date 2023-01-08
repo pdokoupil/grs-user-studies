@@ -169,6 +169,13 @@ def cluster_data_1():
     el_movies = flask.session["elicitation_movies"]
     
     x = load_data_1(el_movies)
+
+    tr = get_tr(languages, get_lang())
+    
+    
+    for i in range(len(x)):
+        x[i]["movie"] = tr(str(x[i]["movie_id"])) + " " + "|".join([tr(f"genre_{y.lower()}") for y in x[i]["genres"]])
+    
     el_movies.extend(x)
     flask.session["elicitation_movies"] = el_movies
 

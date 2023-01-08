@@ -139,14 +139,18 @@ def compare_algorithms():
     # TODO fix that we have two algorithms, add weights and fix algorithm_assignment (randomly assigning with each iteration)
     iteration_started(session["iteration"], session["weights"], movies, algorithm_assignment, result_layout, refinement_layout)
 
+    tr = get_tr(languages, get_lang())
+    for x in movies.values():
+        for i in range(len(x)):
+            x[i]["movie"] = tr(str(x[i]["movie_id"])) + " " + "|".join([tr(f"genre_{y.lower()}") for y in x[i]["genres"]])
+
     params = {
         "movies": movies,
         "iteration": session["iteration"],
         "result_layout": result_layout,
         "MIN_ITERATION_TO_CANCEL": len(result_layout_variants)
     }
-
-    tr = get_tr(languages, get_lang())
+   
     params["contacts"] = tr("footer_contacts")
     params["contact"] = tr("footer_contact")
     params["charles_university"] = tr("footer_charles_university")

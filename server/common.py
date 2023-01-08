@@ -18,9 +18,15 @@ def gen_url_prefix():
 
 def load_languages(base_path):
     res = {}
-    for x in glob.glob(os.path.join(base_path, "static/languages/*.json")):
-        with open(x, "r", encoding="utf8") as f:
-            res[os.path.splitext(os.path.basename(x))[0]] = json.loads(f.read())
+    for lang in [x
+                    for x in os.listdir(os.path.join(base_path, "static/languages"))
+                    if os.path.isdir(os.path.join(base_path, "static/languages", x))
+                ]:
+        for x in glob.glob(os.path.join(base_path, f"static/languages/{lang}/*.json")):
+            with open(x, "r", encoding="utf8") as f:
+                if lang not in res:
+                    res[lang] = dict()
+                res[lang].update(json.loads(f.read()))
     return res
 
 # Returns translator function for translating phrases to given language
