@@ -39,6 +39,8 @@
     "join_guid_not_found": "GUID nebylo nalezeno, prosím zkontrolujte Vámi zadanou URL adresu",
     "join_server_error": "Chyba na straně serveru, prosím zkuste později",
     "join_min_resolution_error": "Pro spuštění této uživatelské studie potřebujete větší rozlišení obrazovky (alespoň 1000x700 pixelů). V případě, že právě používáte mobilní telefon/table, prosím zkuste studii spustit znovu z notebooku či stolního počítače.",
+    "join_czech": "Čeština",
+    "join_english": "English",
     "footer_contacts": "kontakty",
     "footer_contact": "kontakt",
     "footer_charles_university": "Univerzitě Karlově",
@@ -52,6 +54,6 @@
     "elicitation_enter_name": "Zadejte název filmu",
     "elicitation_header": "Získávání preferencí",
     "elicitation_hint_lead": "Vyberte všechny filmy, které jste v minulosti viděli a které se Vám líbí.",
-    "elicitation_hint": "Filmy se vybírají kliknutím, každý vybraný film je zvýrazněný pomocí zeleného okraje. Pokud se Vám žádný z doporučených filmů nelíbí, můžete použít tlačítko pro načtení více filmů které se nachází v dolní části stránky. Alternativně můžete použít vyhledávání v horní části obrazovky k nalezení filmů které znáte a které se Vám líbí. Tento krok nám pomůže identifikovat a lépe porozumět Vaším preferencím. Poznámka: nejnovější filmy v naší databázi jsou z roku 2018.",
+    "elicitation_hint": "Filmy se vybírají kliknutím, každý vybraný film je zvýrazněný pomocí zeleného okraje. Pokud se Vám žádný z doporučených filmů nelíbí, můžete použít tlačítko pro načtení více filmů které se nachází v dolní části stránky. Alternativně můžete použít vyhledávání v horní části obrazovky k nalezení filmů které znáte a které se Vám líbí. Tento krok nám pomůže identifikovat a lépe porozumět Vaším preferencím. Poznámka: nejnovější filmy v naší databázi jsou z roku 2018. Při najetí myší na libovolný film se zobrazí Český název a seznam žánrů.",
     "elicitation_title": "Získávání Preferencí"
 }

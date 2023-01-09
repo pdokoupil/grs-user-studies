@@ -3,7 +3,16 @@
 <div id="app">
   <b-container fluid>
     <b-jumbotron class="smallJumbotron" header="{{about_study}}">
-      <p>{{study_details}}</p>
+      <b-row align-v="center">
+        <b-col cols="10">{{study_details}}</b-col>
+        {% if lang == "cs" %}
+        <b-col align-h="end" align-v="center"><b-button @click="selectLanguage('en')">{{english}}</b-button></b-col>
+        <b-col align-h="end" align-v="center"><b-button @click="selectLanguage('cs')" disabled>{{czech}}</b-button></b-col>
+        {% else %}
+        <b-col align-h="end" align-v="center"><b-button @click="selectLanguage('en')" disabled>{{english}}</b-button></b-col>
+        <b-col align-h="end" align-v="center"><b-button @click="selectLanguage('cs')">{{czech}}</b-button></b-col>
+        {% endif %}
+      </b-row>
     </b-jumbotron>
     <b-row align-h="center">
       <b-col align-h="center" sm="5" class="mr-3 ml-3">
@@ -12,7 +21,7 @@
           <b-form-group
             horizontal
           >
-              <b-row class="mb-1" align-h="center">
+              <b-row class="mb-1 mt-3" align-h="center">
                 <h4>{{participant_details}}</h4>
               </b-row>
               <!-- csrf_token is only needed for POST -->
@@ -181,6 +190,35 @@
           }
         },
         methods: {
+          setGetParameter(paramName, paramValue) {
+            let d = {};
+            let params = window.location.search.split(/\?|&/);
+            let nParams = 0;
+            for (let i = 0; i < params.length; ++i) {
+              if(!params[i]) {
+                continue;
+              }
+              let parts = params[i].split("=");
+              d[parts[0]] = parts[1];
+              ++nParams;
+            }
+            d[paramName] = paramValue;
+            let newUrl = "?";
+            let i = 0;
+            for (let pName in d) {
+              let val = d[pName];
+              newUrl += `${pName}=${val}`;
+              if (i < nParams - 1) {
+                newUrl += "&";
+              }
+              ++i;
+            }
+            console.log("new url is: " + newUrl);
+          },
+          selectLanguage(newLang) {
+            console.log("new lang" + newLang);
+            console.log(window.location.search);
+          },
           async onSubmit(event) {
             event.preventDefault();
             

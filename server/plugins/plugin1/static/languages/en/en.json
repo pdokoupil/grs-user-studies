@@ -5,7 +5,7 @@
     "algorithm": "Algorithm",
     "compare_note_text": "if movie is present in multiple columns, it is automatically selected for you once you click on any of its occurrences.",
     "compare_hint_lead": "Select movies that you would consider watching tonight",
-    "compare_hint": "Movies are selected by clicking on them and each selected movie is highlighted in green border. If you do not like any of the recommended movies, there is a button at the bottom of this page that you should check. Also answer all the questions below please.",
+    "compare_hint": "Movies are selected by clicking on them and each selected movie is highlighted in green border. If you do not like any of the recommended movies, there is a button at the bottom of this page that you should check. Also answer all the questions below please. When a mouse cursor is placed over a movie, its name and genres will be shown.",
     "compare_algorithm_satisfaction": "Satisfaction with the algorithm's output",
     "compare_like_nothing": "I do not like any of the shown movies.",
     "compare_significantly": "was significantly better",

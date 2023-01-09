@@ -56,6 +56,7 @@ def get_lang():
 # Expected input is continuation_url
 # Expected output is 
 @bp.route("/join", methods=["GET"])
+@multi_lang
 def join():
     assert "continuation_url" in request.args, f"Continuation url must be available: {request.args}"
     assert "guid" in request.args, f"Guid must be available: {request.args}"
@@ -63,6 +64,7 @@ def join():
     params = dict(request.args)
     print(f"Params={params}")
     params["email"] = current_user.email if current_user.is_authenticated else ""
+    params["lang"] = get_lang()
     # if current_user.is_authenticated:
     #     params["email"] = current_user.email
         # with current_app.test_client() as c:
@@ -125,6 +127,8 @@ def join():
     params["guid_not_found"] = tr("join_guid_not_found")
     params["server_error"] = tr("join_server_error")
     params["min_resolution_error"] = tr("join_min_resolution_error")
+    params["czech"] = tr("join_czech")
+    params["english"] = tr("join_english")
 
     print(f"Final params={params}")
     
