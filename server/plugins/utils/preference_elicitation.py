@@ -77,7 +77,8 @@ result_layout_variants = [
     "column-single",
     "rows",
     "row-single",
-    "row-single-scrollable"
+    "row-single-scrollable",
+    "max-columns"
 ]
 
 # Loads the movielens dataset
@@ -314,8 +315,8 @@ def load_data_1(elicitation_movies):
     movie_ids = [loader.movie_index_to_id[movie_idx] for movie_idx in data]
     res = [loader.movies_df_indexed.loc[movie_id].title for movie_id in movie_ids]
     res_genres = [loader.movies_df_indexed.loc[movie_id].genres.split("|") for movie_id in movie_ids]
-    res_genres = [x for x in res_genres if x != ["(no genres listed)"]]
-
+    #res_genres = [x for x in res_genres if x != ["(no genres listed)"]]
+    res_genres = [x if x != ["(no genres listed)"] else [] for x in res_genres]
     
     #print(f"Movies: {loader.movies_df.movieId.unique().shape}, {loader.links_df.movieId.unique().shape}")
     #imdbIds = [loader.links_df.loc[loader.movie_index_to_id[movie_idx]].imdbId for movie_idx in data]
@@ -599,7 +600,7 @@ def enrich_results(top_k, loader):
     #top_k_description = [loader.movie_index_to_description[movie_idx] for movie_idx in top_k]
     top_k_description = [loader.movies_df_indexed.loc[movie_id].title for movie_id in top_k_ids]
     top_k_genres = [loader.movies_df_indexed.loc[movie_id].genres.split("|") for movie_id in top_k_ids]
-    top_k_genres = [x for x in top_k_genres if x != ["(no genres listed)"]]
+    top_k_genres = [x if x != ["(no genres listed)"] else [] for x in top_k_genres]
     
     top_k_url = [loader.get_image(movie_idx) for movie_idx in top_k]
     return [{"movie": movie, "url": url, "movie_idx": str(movie_idx), "movie_id": movie_id, "genres": genres} for movie, url, movie_idx, movie_id, genres in zip(top_k_description, top_k_url, top_k, top_k_ids, top_k_genres)]
