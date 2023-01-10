@@ -219,7 +219,7 @@ def changed_viewport():
         participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "changed-viewport", #InteractionType.query.filter(InteractionType.name == "changed-viewport").first(),
         time = datetime.datetime.utcnow(),
-        data = json.dumps(request.get_json())
+        data = json.dumps(request.get_json(), ensure_ascii=False)
     )
     db.session.add(x)
     db.session.commit()
@@ -233,7 +233,7 @@ def selected_item():
         participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "selected-item", #InteractionType.query.filter(InteractionType.name == "selected-item").first(),
         time = datetime.datetime.utcnow(),
-        data = json.dumps(request.get_json())
+        data = json.dumps(request.get_json(), ensure_ascii=False)
     )
     db.session.add(x)
     db.session.commit()
@@ -246,7 +246,7 @@ def deselected_item():
         participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "deselected-item", #InteractionType.query.filter(InteractionType.name == "deselected-item").first(),
         time = datetime.datetime.utcnow(),
-        data = json.dumps(request.get_json())
+        data = json.dumps(request.get_json(), ensure_ascii=False)
     )
     db.session.add(x)
     db.session.commit()
@@ -264,7 +264,7 @@ def loaded_page():
         participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "loaded-page", #InteractionType.query.filter(InteractionType.name == "loaded-page").first(),
         time = datetime.datetime.utcnow(),
-        data = json.dumps(request.get_json())
+        data = json.dumps(request.get_json(), ensure_ascii=False)
     )
     db.session.add(x)
     db.session.commit()
@@ -276,7 +276,7 @@ def on_input():
         participation = Participation.query.filter(Participation.id == flask.session["participation_id"]).first().id,
         interaction_type = "on-input",
         time = datetime.datetime.utcnow(),
-        data = json.dumps(request.get_json())
+        data = json.dumps(request.get_json(), ensure_ascii=False)
     )
     db.session.add(x)
     db.session.commit()
@@ -286,7 +286,7 @@ def on_input():
 def on_message():
     x = Message(
         time = datetime.datetime.utcnow(),
-        data = json.dumps(request.get_json())
+        data = json.dumps(request.get_json(), ensure_ascii=False)
     )
 
     if "participation_id" in flask.session:

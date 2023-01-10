@@ -367,7 +367,7 @@ def iteration_started(iteration, weights, movies, algorithm_assignment, result_l
         participation = Participation.query.filter(Participation.id == session["participation_id"]).first().id,
         interaction_type = "iteration-started",
         time = datetime.datetime.utcnow(),
-        data = json.dumps(data)
+        data = json.dumps(data, ensure_ascii=False)
     )
     db.session.add(x)
     db.session.commit()
@@ -383,7 +383,7 @@ def iteration_ended(iteration, selected, new_weights):
         participation = Participation.query.filter(Participation.id == session["participation_id"]).first().id,
         interaction_type = "iteration-ended",
         time = datetime.datetime.utcnow(),
-        data = json.dumps(data)
+        data = json.dumps(data, ensure_ascii=False)
     )
     db.session.add(x)
     db.session.commit()
