@@ -156,7 +156,7 @@ def compare_algorithms():
         "movies": movies,
         "iteration": session["iteration"],
         "result_layout": result_layout,
-        "MIN_ITERATION_TO_CANCEL": len(result_layout_variants)
+        "MIN_ITERATION_TO_CANCEL": len(session["permutation"])
     }
    
     params["contacts"] = tr("footer_contacts")
