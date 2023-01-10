@@ -5,16 +5,17 @@ window.app = new Vue({
     delimiters: ['[[',']]'], // Used to replace double { escaping with double [ escaping (to prevent jinja vs vue inference)
     data: function() {
         console.log("Called");
-        let moviesColumnified = [];
-
         const colsPerRow = itemsPerRow;
 
-        var numAlgorithms = 0;
-        var variantNames = [];
+        var numAlgorithms = Object.keys(movies).length;
+        var variantNames = new Array(numAlgorithms);
+        let moviesColumnified = new Array(numAlgorithms);
 
         for (variantIdx in movies) {
-            variantNames.push(variantIdx.toUpperCase());
-            let variantResults = movies[variantIdx];
+            let variantResults = movies[variantIdx]["movies"];
+            let order = parseInt(movies[variantIdx]["order"]);
+            variantNames[order] = variantIdx.toUpperCase();
+            
             let variantResultsColumnified = [];
             let row = [];
             for (idx in variantResults) {
@@ -28,8 +29,7 @@ window.app = new Vue({
             if (row.length > 0) {
                 variantResultsColumnified.push(row);
             }
-            moviesColumnified.push(variantResultsColumnified);
-            ++numAlgorithms;
+            moviesColumnified[order] = variantResultsColumnified;
         }
 
         console.log(moviesColumnified);
