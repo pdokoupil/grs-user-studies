@@ -409,6 +409,16 @@ def finish_user_study():
     params["title"] = tr("finish_title")
     params["header"] = tr("finish_header")
     params["hint"] = tr("finish_hint")
+    
+    # Statistics
+    params["n_selected"] = sum([len(x) for x in session["selected_movie_indices"]])
+    params["n_recommended"] = int(session["iteration"]) * session["rec_k"] * 2 # TODO specific for 2 variants
+    params["n_gamma"] = 0
+    params["n_delta"] = 0
+    params["avg_rating_gamma"] = 0
+    params["avg_rating_delta"] = 0
+    params["n_selected_elicitation"] = len(session["elicitation_selected_movies"])
+    params["n_shown_elicitation"] = len(session["elicitation_movies"])
 
     return render_template("finished_user_study.html", **params)
 

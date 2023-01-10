@@ -5,6 +5,36 @@
         <b-jumbotron class="smallJumbotron" header="{{header}}" lead="">
             {{hint}}
         </b-jumbotron>
+        <b-row align-h="center">
+            <h4>Your statistics</h4>
+        </b-row>
+        <b-row align-h="center">
+            <p>
+                In total, you have selected <strong>{{n_selected}}</strong> movies out of <strong>{{n_recommended}}</strong> movies that were recommended to you.
+            </p>
+        </b-row>
+        <b-row align-h="center">
+            <p>
+                Out of the {{n_selected}} movies you have selected, <strong>{{n_gamma}}</strong> were recommended by the algorithm Gamma and <strong>{{n_delta}}</strong> were recommended by algorithm Delta.
+            </p>
+        </b-row>
+        <b-row align-h="center">
+            <p>
+                On average, you rated recommendations from Gamma algorithm by <strong>{{avg_rating_gamma}}</strong> out of 5 stars and recommendations from Delta algorithm by <strong>{{avg_rating_delta}}</strong> out of 5 stars.
+                {% if avg_rating_gamma > avg_rating_delta %}
+                Therefore you liked recommendations made by algorithm <strong>Gamma</strong> <u>more</u> than those made by algorithm <strong>Delta</strong>.
+                {% elif avg_rating_gamma < avg_rating_delta %}
+                Therefore you liked recommendations made by algorithm <strong>Delta</strong> <u>more</u> than those made by algorithm <strong>Gamma</strong>.
+                {% else %}
+                Therefore you liked recommendations from both algorithms at <u>about the same</u>.
+                {% endif %}
+            </p>
+        </b-row>
+        <b-row align-h="center">
+            <p>
+                During preference elicitation, you have selected <strong>{{n_selected_elicitation}}</strong> movies out of <strong>{{n_shown_elicitation}}</strong> movies that were shown to you during preference elicitation.
+            </p>
+        </b-row>
     </b-container>
 </div>
 
