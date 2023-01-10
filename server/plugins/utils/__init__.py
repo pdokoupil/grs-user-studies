@@ -367,7 +367,29 @@ def send_feedback():
     print("### zeroing")
     flask.session["selected_movie_indices"] = [] #dict() # For each iteration, we can store selected movies
 
-    flask.session["permutation"] = np.random.permutation(len(result_layout_variants)).tolist()
+
+    # Build permutation
+    # We choose 4 out of 6 result layout variants
+    # Randomly generate order of algorithms for each of them and append second list with inverses.
+    p = np.random.permutation(len(result_layout_variants))[:4]
+    r = np.random.randint(size=p.shape, low=0, high=2)
+    rnd_order = r.tolist() + (1 - r).tolist()
+    p = p.tolist() * 2
+    assert len(algorithms) == 2 # This implementation only works for 2 algorithms
+    algo_order = []
+    for j in range(len(rnd_order)):
+        d = {}
+        for i, algorithm in enumerate(algorithms):
+            if i == 0:
+                d[algorithm] = rnd_order[j]
+            else:
+                d[algorithm] = 1 - rnd_order[j]
+        algo_order.append({
+            "result_layout": p[j],
+            "order": d
+        })
+    print(f"Algorithm order is: {algo_order}")
+    flask.session["permutation"] = algo_order #np.random.permutation(len(result_layout_variants)).tolist()
     return redirect(url_for("plugin1.compare_algorithms"))
     #return redirect(url_for("plugin1.compare_algorithms", movies=recommended_items))
 

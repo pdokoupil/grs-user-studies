@@ -111,26 +111,33 @@ def compare_algorithms():
             prepare_recommendations(k=int(k_param))
     # movies = [session["movies"][-1]]
     # movies.append([movies[0][0]] * len(movies[0]))
+    
+    p = session["permutation"][0]
+
     algorithm_assignment = {}
     algorithms = list(algorithm_name_mapping.keys())
     # Make them in random order so that they are displayed differently
-    random.shuffle(algorithms)
+    #random.shuffle(algorithms)
     movies = {}
     for i, algorithm in enumerate(algorithms):
         if session["movies"][algorithm][-1]:
             # Only non-empty makes it to the results
-            movies[algorithm_name_mapping[algorithm]] = session["movies"][algorithm][-1]
+            movies[algorithm_name_mapping[algorithm]] = {
+                "movies": session["movies"][algorithm][-1],
+                "order": p["order"][algorithm]
+            }
             algorithm_assignment[str(i)] = {
                 "algorithm": algorithm,
-                "name": algorithm_name_mapping[algorithm]
+                "name": algorithm_name_mapping[algorithm],
+                "order": p["order"][algorithm]
             }
 
 
-
-    result_layout = request.args.get("result_layout") or "rows"
+    #result_layout = request.args.get("result_layout") or "rows"
     #result_layout = result_layout or "rows" #"columns" # "rows" # "column-single" # "row-single"
     #result_layout = result_layout_variants[session["permutation"][0]]
-    
+    result_layout = result_layout_variants[p["result_layout"]]
+
     # Decide on next refinement layout
     refinement_layout = "3" # Use version 3
     session["refinement_layout"] = refinement_layout
@@ -140,7 +147,8 @@ def compare_algorithms():
     iteration_started(session["iteration"], session["weights"], movies, algorithm_assignment, result_layout, refinement_layout)
 
     tr = get_tr(languages, get_lang())
-    for x in movies.values():
+    for d in movies.values():
+        x = d["movies"]
         for i in range(len(x)):
             x[i]["movie"] = tr(str(x[i]["movie_id"])) + " " + "|".join([tr(f"genre_{y.lower()}") for y in x[i]["genres"]])
 
