@@ -32,7 +32,7 @@
     "join_informed_consent_p31": "randomly generated ID of the participant (i.e. UID = 468201) demographic data of the participant",
     "join_informed_consent_p32": "demographic data of the participant ( age group, education, machine learning familiarity)",
     "join_informed_consent_p33": "participant's responses to individual tasks",
-    "join_informed_consent_p4": "In the dataset, there will be no mapping between the ID of the user and his/her true identity (we do not have such data anyway)",
+    "join_informed_consent_p4": "In the dataset, there will be no mapping between the ID of the user and their true identity (we do not have such data anyway)",
     "join_informed_consent_p5": "You can stop your participation at any time (just close the browser window:-). You can always revert your consent to use your responses - just write to us with your details (submitted e-mail, time when you started participation etc.) If you did submit your e-mail, but do not want to receive any new messages from us, just write us an email.",
     "join_informed_consent_p6": "PS: any disputes (hopefully, none should arise:-) will be governed by the law and jurisdiction of Czech Republic",
     "join_start_user_study": "Start user study",
