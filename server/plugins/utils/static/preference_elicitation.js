@@ -126,6 +126,18 @@ window.app = new Vue({
 
             this.rows = res["rows"];
             this.items = res["items"];
+
+            // VUE is reusing dom and dropping classes, add them back
+            this.$nextTick(() => {
+                for (let i in this.selected) {
+                    console.log("Searching for: '" + this.selected[i].movie.idx + "'");
+                    let el = document.getElementById(this.selected[i].movie.idx);
+                    if (el) {
+                        el.classList.remove("selected");
+                        el.classList.add("selected");
+                    }
+                }
+            });
         },
         onKeyDownSearchMovieName(e) {
             if (e.key === "Enter") {
@@ -137,6 +149,18 @@ window.app = new Vue({
             this.rows = this.rowsBackup;
             this.itemsBackup = null;
             this.rowsBackup = null;
+
+            // VUE is reusing dom and dropping classes, add them back
+            this.$nextTick(() => {
+                for (let i in this.selected) {
+                    console.log("Searching for: '" + this.selected[i].movie.idx + "'");
+                    let el = document.getElementById(this.selected[i].movie.idx);
+                    if (el) {
+                        el.classList.remove("selected");
+                        el.classList.add("selected");
+                    }
+                }
+            });
         },
         async onClickLoadMore() {
             let data = await fetch("/utils/cluster-data-" + this.impl).then((resp) => resp.json()).then((resp) => resp);
@@ -147,13 +171,25 @@ window.app = new Vue({
         onUpdateSearchMovieName(newValue) {
             console.log(this.searchMovieName);
         },
+        movieIndexOf(arr, item) {
+            for (let idx in arr) {
+                let arrItem = arr[idx];
+                if (arrItem.movie.idx === item.movie.idx
+                    && arrItem.movieName === item.movieName
+                    && arrItem.movie.url === item.movie.url) {
+                        return idx;
+                    }
+            }
+            return -1;
+        },
         onSelectMovie(event, item) {
             console.log("Hello from ID=" + event.srcElement.id);
             console.log(event.srcElement)
             console.log(event);
             console.log(item.movieName);
 
-            let index = this.selected.indexOf(item);
+            // TODO wrap movieIndexOf as generic indexOf with selector lambda
+            let index = this.movieIndexOf(this.selected, item); //this.selected.indexOf(item);
             if (index > -1) {
                 // Already there, remove it
                 this.selected.splice(index, 1);
@@ -171,7 +207,7 @@ window.app = new Vue({
             console.log(item);
 
                 
-            let index = this.selected.indexOf(item);
+            let index = this.movieIndexOf(this.selected, item); // this.selected.indexOf(item);
             if (index > -1) {
                 this.selected.splice(index, 1);
                 //this.$refs.selectableTable.unselectRow(this.items.indexOf(item));
