@@ -193,18 +193,17 @@
           setGetParameter(paramName, paramValue) {
             let d = {};
             let params = window.location.search.split(/\?|&/);
-            let nParams = 0;
             for (let i = 0; i < params.length; ++i) {
               if(!params[i]) {
                 continue;
               }
               let parts = params[i].split("=");
               d[parts[0]] = parts[1];
-              ++nParams;
             }
             d[paramName] = paramValue;
             let newUrl = "?";
             let i = 0;
+            let nParams = Object.keys(d).length;
             for (let pName in d) {
               let val = d[pName];
               newUrl += `${pName}=${val}`;
@@ -213,11 +212,12 @@
               }
               ++i;
             }
-            console.log("new url is: " + newUrl);
+            return newUrl;
           },
           selectLanguage(newLang) {
             console.log("new lang" + newLang);
             console.log(window.location.search);
+            window.location.search = this.setGetParameter("lang", newLang);
           },
           async onSubmit(event) {
             event.preventDefault();
@@ -232,7 +232,8 @@
                 "age_group": this.ageGroup,
                 "education": this.education,
                 "ml_familiar": this.mlFamiliar,
-                "user_study_guid": "{{guid}}"
+                "user_study_guid": "{{guid}}",
+                "lang": "{{lang}}"
             };
 
             // TODO move this to some consumer plugin validation step or at the very early of the plugin

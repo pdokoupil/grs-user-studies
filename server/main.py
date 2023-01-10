@@ -162,7 +162,9 @@ def add_participant():
         age_group=json_data["age_group"],
         gender=json_data["gender"],
         education=json_data["education"],
-        ml_familiar=json_data["ml_familiar"]
+        ml_familiar=json_data["ml_familiar"],
+        language=json_data["lang"],
+        uuid=flask.session["uuid"]
     )
     print("Participation created")
     db.session.add(participation)

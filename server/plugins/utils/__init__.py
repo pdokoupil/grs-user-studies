@@ -3,6 +3,7 @@
 import os
 import random
 import re
+import secrets
 from flask import Blueprint, jsonify, request, redirect, current_app, url_for, make_response, render_template
 from flask_login import current_user
 from itsdangerous import URLSafeTimedSerializer
@@ -132,8 +133,9 @@ def join():
 
     print(f"Final params={params}")
     
+    if "uuid" not in flask.session:
+        flask.session["uuid"] = secrets.token_urlsafe(16)
     
-
     return render_template("join.html", **params)
 
 @bp.route("/preference-elicitation", methods=["GET", "POST"])
@@ -358,8 +360,7 @@ def send_feedback():
     
     flask.session["movies"] = recommendations
     #flask.session["movies"] = [recommended_items]
-    
-    
+
     flask.session["iteration"] = 1
     # TODO store all these information in DB as well
     flask.session["elicitation_selected_movies"] = selected_movies
@@ -367,7 +368,6 @@ def send_feedback():
     flask.session["selected_movie_indices"] = [] #dict() # For each iteration, we can store selected movies
 
     flask.session["permutation"] = np.random.permutation(len(result_layout_variants)).tolist()
-
     return redirect(url_for("plugin1.compare_algorithms"))
     #return redirect(url_for("plugin1.compare_algorithms", movies=recommended_items))
 

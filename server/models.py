@@ -60,6 +60,8 @@ class Participation(db.Model):
     user_study_id = db.Column(db.Integer, db.ForeignKey('userstudy.id'))
     time_joined = db.Column(db.DateTime)
     time_finished = db.Column(db.DateTime)
+    uuid = db.Column(db.String)
+    language = db.Column(db.String)
 
 class LoginForm(FlaskForm):
     email = EmailField('email', validators=[DataRequired("missing mail")])
